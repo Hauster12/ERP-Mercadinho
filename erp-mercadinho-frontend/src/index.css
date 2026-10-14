@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme {
+  --color-nexus-cyan: #0891B2;
+  --color-nexus-cyan-hover: #0E7490;
+  --color-nexus-cyan-muted: #E0F2FE;
+  --color-nexus-yellow: #D97706;
+  --color-nexus-yellow-hover: #B45309;
+  --color-nexus-yellow-muted: #FEF3C7;
+
+  --color-bg-base: #F8FAFC;
+  --color-bg-surface: #FFFFFF;
+  --color-bg-elevated: #F1F5F9;
+  --color-bg-hover: #E2E8F0;
+  --color-border-subtle: #E2E8F0;
+  --color-border-accent: rgba(8, 145, 178, 0.4);
+
+  --font-brand: 'Syne', sans-serif;
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+:root {
+  color-scheme: light;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+body {
+  margin: 0;
+  background-color: #F8FAFC;
+  color: #0F172A;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Technical clean scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* Tabular figures for prices, SKU and codes */
+.tabular-numbers {
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+}

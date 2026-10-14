@@ -1,0 +1,431 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  ADMIN
+  FUNCIONARIO
+}
+
+enum Unit {
+  UN
+  KG
+  L
+  CX
+  PCT
+}
+
+enum MovementType {
+  ENTRADA
+  SAIDA
+  AJUSTE
+}
+
+enum MovementOrigin {
+  VENDA
+  COMPRA
+  INVENTARIO_MANUAL
+  DEVOLUCAO
+  PERDA
+}
+
+enum CashStatus {
+  ABERTO
+  FECHADO
+}
+
+enum CashOperationType {
+  SANGRIA
+  REFORCO
+  ABERTURA
+  FECHAMENTO
+}
+
+enum SaleStatus {
+  CONCLUIDA
+  CANCELADA
+  EM_ANDAMENTO
+}
+
+enum PaymentMethod {
+  DINHEIRO
+  CARTAO_CREDITO
+  CARTAO_DEBITO
+  PIX
+}
+
+enum PurchaseStatus {
+  PENDENTE
+  RECEBIDO
+  CANCELADO
+}
+
+enum FinancialType {
+  RECEITA
+  DESPESA
+}
+
+enum FinancialStatus {
+  PAGO
+  PENDENTE
+  CANCELADO
+}
+
+enum FiscalType {
+  COMPROVANTE
+  NFCe
+  NFe
+}
+
+enum FiscalStatus {
+  SIMULADO
+  CANCELADO
+}
+
+enum ReconciliationStatus {
+  CONCILIADO
+  DIVERGENTE
+}
+
+model Usuario {
+  id           String                  @id @default(uuid()) @db.Uuid
+  nome         String                  @db.VarChar(150)
+  email        String                  @unique @db.VarChar(254)
+  senhaHash    String
+  perfil       UserRole                @default(FUNCIONARIO)
+  ativo        Boolean                 @default(true)
+  avatarUrl    String?
+  criadoEm     DateTime                @default(now())
+  atualizadoEm DateTime                @updatedAt
+  caixas       Caixa[]
+  operacoes    OperacaoCaixa[]
+  vendas       Venda[]
+  compras      PedidoCompra[]
+  movimentos   MovimentacaoEstoque[]
+  conciliacoes ConciliacaoFinanceira[]
+
+  @@map("usuarios")
+}
+
+model Categoria {
+  id           String    @id @default(uuid()) @db.Uuid
+  nome         String    @unique @db.VarChar(100)
+  descricao    String?
+  ativo        Boolean   @default(true)
+  criadoEm     DateTime  @default(now())
+  atualizadoEm DateTime  @updatedAt
+  produtos     Produto[]
+
+  @@map("categorias")
+}
+
+model Produto {
+  id            String                @id @default(uuid()) @db.Uuid
+  categoriaId   String                @db.Uuid
+  categoria     Categoria             @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
+  fornecedorId  String?               @db.Uuid
+  fornecedor    Fornecedor?           @relation("Principal", fields: [fornecedorId], references: [id], onDelete: Restrict)
+  nome          String                @db.VarChar(150)
+  sku           String                @unique @db.VarChar(60)
+  codigoBarras  String?               @unique @db.VarChar(40)
+  unidade       Unit                  @default(UN)
+  precoCusto    Decimal               @db.Decimal(14, 2)
+  precoVenda    Decimal               @db.Decimal(14, 2)
+  estoqueMinimo Decimal               @default(0) @db.Decimal(14, 3)
+  estoqueAtual  Decimal               @default(0) @db.Decimal(14, 3)
+  imagemUrl     String?
+  ativo         Boolean               @default(true)
+  criadoEm      DateTime              @default(now())
+  atualizadoEm  DateTime              @updatedAt
+  fornecedores  ProdutoFornecedor[]
+  movimentos    MovimentacaoEstoque[]
+  itensVenda    ItemVenda[]
+  itensCompra   ItemPedidoCompra[]
+
+  @@index([categoriaId])
+  @@index([fornecedorId])
+  @@map("produtos")
+}
+
+model Fornecedor {
+  id                 String              @id @default(uuid()) @db.Uuid
+  razaoSocial        String              @db.VarChar(150)
+  nomeFantasia       String?
+  cnpj               String?             @unique @db.VarChar(14)
+  telefone           String?
+  email              String?
+  ativo              Boolean             @default(true)
+  criadoEm           DateTime            @default(now())
+  atualizadoEm       DateTime            @updatedAt
+  produtosPrincipais Produto[]           @relation("Principal")
+  produtos           ProdutoFornecedor[]
+  compras            PedidoCompra[]
+
+  @@map("fornecedores")
+}
+
+model ProdutoFornecedor {
+  id               String     @id @default(uuid()) @db.Uuid
+  produtoId        String     @db.Uuid
+  fornecedorId     String     @db.Uuid
+  produto          Produto    @relation(fields: [produtoId], references: [id], onDelete: Restrict)
+  fornecedor       Fornecedor @relation(fields: [fornecedorId], references: [id], onDelete: Restrict)
+  codigoFornecedor String?
+  ultimoCusto      Decimal?   @db.Decimal(14, 2)
+  criadoEm         DateTime   @default(now())
+
+  @@unique([produtoId, fornecedorId])
+  @@index([fornecedorId])
+  @@map("produto_fornecedor")
+}
+
+model Cliente {
+  id            String   @id @default(uuid()) @db.Uuid
+  nome          String   @db.VarChar(150)
+  cpfCnpj       String?  @unique @db.VarChar(14)
+  telefone      String?
+  email         String?
+  endereco      String?
+  limiteCredito Decimal  @default(0) @db.Decimal(14, 2)
+  ativo         Boolean  @default(true)
+  criadoEm      DateTime @default(now())
+  atualizadoEm  DateTime @updatedAt
+  vendas        Venda[]
+
+  @@map("clientes")
+}
+
+model Caixa {
+  id           String                  @id @default(uuid()) @db.Uuid
+  usuarioId    String                  @db.Uuid
+  usuario      Usuario                 @relation(fields: [usuarioId], references: [id], onDelete: Restrict)
+  valorInicial Decimal                 @db.Decimal(14, 2)
+  valorFinal   Decimal?                @db.Decimal(14, 2)
+  abertoEm     DateTime                @default(now())
+  fechadoEm    DateTime?
+  status       CashStatus              @default(ABERTO)
+  operacoes    OperacaoCaixa[]
+  vendas       Venda[]
+  lancamentos  LancamentoFinanceiro[]
+  conciliacoes ConciliacaoFinanceira[]
+
+  @@index([usuarioId, status])
+  @@map("caixas")
+}
+
+model OperacaoCaixa {
+  id         String            @id @default(uuid()) @db.Uuid
+  caixaId    String            @db.Uuid
+  usuarioId  String            @db.Uuid
+  caixa      Caixa             @relation(fields: [caixaId], references: [id], onDelete: Restrict)
+  usuario    Usuario           @relation(fields: [usuarioId], references: [id], onDelete: Restrict)
+  tipo       CashOperationType
+  valor      Decimal           @db.Decimal(14, 2)
+  observacao String?
+  criadoEm   DateTime          @default(now())
+
+  @@index([caixaId, criadoEm])
+  @@map("operacoes_caixa")
+}
+
+model Venda {
+  id                 String                 @id @default(uuid()) @db.Uuid
+  caixaId            String                 @db.Uuid
+  usuarioId          String                 @db.Uuid
+  clienteId          String?                @db.Uuid
+  caixa              Caixa                  @relation(fields: [caixaId], references: [id], onDelete: Restrict)
+  usuario            Usuario                @relation(fields: [usuarioId], references: [id], onDelete: Restrict)
+  cliente            Cliente?               @relation(fields: [clienteId], references: [id], onDelete: Restrict)
+  subtotal           Decimal                @db.Decimal(14, 2)
+  desconto           Decimal                @default(0) @db.Decimal(14, 2)
+  valorTotal         Decimal                @db.Decimal(14, 2)
+  status             SaleStatus             @default(CONCLUIDA)
+  chaveIdempotencia  String                 @unique @db.VarChar(100)
+  motivoCancelamento String?
+  canceladoEm        DateTime?
+  criadoEm           DateTime               @default(now())
+  atualizadoEm       DateTime               @updatedAt
+  itens              ItemVenda[]
+  pagamentos         Pagamento[]
+  documentoFiscal    DocumentoFiscal?
+  lancamentos        LancamentoFinanceiro[]
+
+  @@index([caixaId, status])
+  @@index([clienteId])
+  @@index([criadoEm])
+  @@map("vendas")
+}
+
+model ItemVenda {
+  id            String                @id @default(uuid()) @db.Uuid
+  vendaId       String                @db.Uuid
+  produtoId     String                @db.Uuid
+  venda         Venda                 @relation(fields: [vendaId], references: [id], onDelete: Restrict)
+  produto       Produto               @relation(fields: [produtoId], references: [id], onDelete: Restrict)
+  produtoNome   String
+  produtoSku    String
+  quantidade    Decimal               @db.Decimal(14, 3)
+  precoUnitario Decimal               @db.Decimal(14, 2)
+  custoUnitario Decimal               @db.Decimal(14, 2)
+  subtotal      Decimal               @db.Decimal(14, 2)
+  movimentos    MovimentacaoEstoque[]
+
+  @@unique([vendaId, produtoId])
+  @@index([produtoId])
+  @@map("itens_venda")
+}
+
+model Pagamento {
+  id                String        @id @default(uuid()) @db.Uuid
+  vendaId           String        @db.Uuid
+  venda             Venda         @relation(fields: [vendaId], references: [id], onDelete: Restrict)
+  forma             PaymentMethod
+  valor             Decimal       @db.Decimal(14, 2)
+  confirmado        Boolean       @default(true)
+  referenciaExterna String?
+  criadoEm          DateTime      @default(now())
+
+  @@index([vendaId])
+  @@map("pagamentos")
+}
+
+model PedidoCompra {
+  id           String                 @id @default(uuid()) @db.Uuid
+  fornecedorId String                 @db.Uuid
+  usuarioId    String                 @db.Uuid
+  fornecedor   Fornecedor             @relation(fields: [fornecedorId], references: [id], onDelete: Restrict)
+  usuario      Usuario                @relation(fields: [usuarioId], references: [id], onDelete: Restrict)
+  numero       String                 @unique @default(uuid())
+  numeroNota   String?
+  valorTotal   Decimal                @db.Decimal(14, 2)
+  status       PurchaseStatus         @default(PENDENTE)
+  criadoEm     DateTime               @default(now())
+  recebidoEm   DateTime?
+  atualizadoEm DateTime               @updatedAt
+  itens        ItemPedidoCompra[]
+  lancamentos  LancamentoFinanceiro[]
+
+  @@index([fornecedorId])
+  @@map("pedidos_compra")
+}
+
+model ItemPedidoCompra {
+  id             String                @id @default(uuid()) @db.Uuid
+  pedidoCompraId String                @db.Uuid
+  produtoId      String                @db.Uuid
+  pedidoCompra   PedidoCompra          @relation(fields: [pedidoCompraId], references: [id], onDelete: Restrict)
+  produto        Produto               @relation(fields: [produtoId], references: [id], onDelete: Restrict)
+  produtoNome    String
+  quantidade     Decimal               @db.Decimal(14, 3)
+  custoUnitario  Decimal               @db.Decimal(14, 2)
+  subtotal       Decimal               @db.Decimal(14, 2)
+  movimentos     MovimentacaoEstoque[]
+
+  @@unique([pedidoCompraId, produtoId])
+  @@index([produtoId])
+  @@map("itens_pedido_compra")
+}
+
+model MovimentacaoEstoque {
+  id                 String            @id @default(uuid()) @db.Uuid
+  produtoId          String            @db.Uuid
+  usuarioId          String            @db.Uuid
+  itemVendaId        String?           @db.Uuid
+  itemPedidoCompraId String?           @db.Uuid
+  produto            Produto           @relation(fields: [produtoId], references: [id], onDelete: Restrict)
+  usuario            Usuario           @relation(fields: [usuarioId], references: [id], onDelete: Restrict)
+  itemVenda          ItemVenda?        @relation(fields: [itemVendaId], references: [id], onDelete: Restrict)
+  itemPedidoCompra   ItemPedidoCompra? @relation(fields: [itemPedidoCompraId], references: [id], onDelete: Restrict)
+  tipo               MovementType
+  origem             MovementOrigin
+  quantidade         Decimal           @db.Decimal(14, 3)
+  custoUnitario      Decimal?          @db.Decimal(14, 2)
+  observacao         String?
+  criadoEm           DateTime          @default(now())
+
+  @@index([produtoId, criadoEm])
+  @@index([usuarioId])
+  @@index([itemVendaId])
+  @@index([itemPedidoCompraId])
+  @@map("movimentacoes_estoque")
+}
+
+model LancamentoFinanceiro {
+  id             String          @id @default(uuid()) @db.Uuid
+  vendaId        String?         @db.Uuid
+  pedidoCompraId String?         @db.Uuid
+  caixaId        String?         @db.Uuid
+  venda          Venda?          @relation(fields: [vendaId], references: [id], onDelete: Restrict)
+  pedidoCompra   PedidoCompra?   @relation(fields: [pedidoCompraId], references: [id], onDelete: Restrict)
+  caixa          Caixa?          @relation(fields: [caixaId], references: [id], onDelete: Restrict)
+  tipo           FinancialType
+  descricao      String
+  valor          Decimal         @db.Decimal(14, 2)
+  vencimento     DateTime
+  pagamentoEm    DateTime?
+  status         FinancialStatus @default(PENDENTE)
+  criadoEm       DateTime        @default(now())
+  atualizadoEm   DateTime        @updatedAt
+
+  @@index([vendaId])
+  @@index([pedidoCompraId])
+  @@index([caixaId])
+  @@index([status, vencimento])
+  @@map("lancamentos_financeiros")
+}
+
+model DocumentoFiscal {
+  id          String       @id @default(uuid()) @db.Uuid
+  vendaId     String       @unique @db.Uuid
+  venda       Venda        @relation(fields: [vendaId], references: [id], onDelete: Restrict)
+  tipo        FiscalType   @default(COMPROVANTE)
+  status      FiscalStatus @default(SIMULADO)
+  numero      String       @unique @default(uuid())
+  chaveAcesso String?
+  mensagem    String       @default("Comprovante interno sem valor fiscal")
+  emitidoEm   DateTime     @default(now())
+
+  @@map("documentos_fiscais")
+}
+
+model ConciliacaoFinanceira {
+  id             String               @id @default(uuid()) @db.Uuid
+  caixaId        String               @unique @db.Uuid
+  usuarioId      String               @db.Uuid
+  caixa          Caixa                @relation(fields: [caixaId], references: [id], onDelete: Restrict)
+  usuario        Usuario              @relation(fields: [usuarioId], references: [id], onDelete: Restrict)
+  periodoInicio  DateTime
+  periodoFim     DateTime
+  valorSistema   Decimal              @db.Decimal(14, 2)
+  valorInformado Decimal              @db.Decimal(14, 2)
+  diferenca      Decimal              @db.Decimal(14, 2)
+  status         ReconciliationStatus
+  observacao     String?
+  criadoEm       DateTime             @default(now())
+
+  @@index([usuarioId])
+  @@map("conciliacoes_financeiras")
+}
+
+model ConfiguracaoEmpresa {
+  id                Int      @id @default(1)
+  razaoSocial       String   @default("")
+  nomeFantasia      String   @default("")
+  cnpj              String   @default("")
+  inscricaoEstadual String   @default("")
+  telefone          String   @default("")
+  email             String   @default("")
+  endereco          String   @default("")
+  cidade            String   @default("")
+  ambienteNFCe      String   @default("HOMOLOGACAO")
+  impressoraPadrao  String   @default("")
+  atualizadoEm      DateTime @updatedAt
+
+  @@map("configuracao_empresa")
+}

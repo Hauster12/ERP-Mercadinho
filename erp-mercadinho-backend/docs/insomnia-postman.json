@@ -1,0 +1,975 @@
+{
+  "info": {
+    "name": "ERP Mercadinho — API",
+    "description": "Importe no Insomnia. Login e IDs devem ser copiados manualmente para variáveis. Gere chaveVenda nova para nova venda; repita a mesma chave para retry. Exemplos de documentos fictícios para desenvolvimento.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api"
+    },
+    {
+      "key": "email",
+      "value": "admin@mercadinho.local"
+    },
+    {
+      "key": "senha",
+      "value": "senhaforte123"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "categoriaId",
+      "value": ""
+    },
+    {
+      "key": "produtoId",
+      "value": ""
+    },
+    {
+      "key": "clienteId",
+      "value": ""
+    },
+    {
+      "key": "fornecedorId",
+      "value": ""
+    },
+    {
+      "key": "caixaId",
+      "value": ""
+    },
+    {
+      "key": "vendaId",
+      "value": ""
+    },
+    {
+      "key": "compraId",
+      "value": ""
+    },
+    {
+      "key": "usuarioId",
+      "value": ""
+    },
+    {
+      "key": "lancamentoId",
+      "value": ""
+    },
+    {
+      "key": "chaveVenda",
+      "value": "70a6a367-c71a-4dfd-be54-e4ffeccdf63d"
+    }
+  ],
+  "item": [
+    {
+      "name": "Verificar API — GET /health",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/health",
+        "header": [],
+        "description": "Permissão: Público"
+      }
+    },
+    {
+      "name": "Login — POST /auth/login",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/auth/login",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "description": "Permissão: Público",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"senha\": \"{{senha}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Usuário atual — GET /auth/me",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/auth/me",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "description": "Permissão: Autenticado"
+      }
+    },
+    {
+      "name": "Listar Categorias — GET /categorias",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/categorias",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "description": "Permissão: Autenticado"
+      }
+    },
+    {
+      "name": "Criar Categorias — POST /categorias",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/categorias",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "description": "Permissão: ADMIN",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nome\": \"Mercearia\",\n  \"descricao\": \"Produtos de mercearia\",\n  \"ativo\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Atualizar Categorias — PUT /categorias/{{categoriaId}}",
+      "request": {
+        "method": "PUT",
+        "url": "{{baseUrl}}/categorias/{{categoriaId}}",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "description": "Permissão: ADMIN",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nome\": \"Mercearia\",\n  \"descricao\": \"Produtos de mercearia\",\n  \"ativo\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Listar Produtos — GET /produtos",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/produtos",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "description": "Permissão: Autenticado"
+      }
+    },
+    {
+      "name": "Criar Produtos — POST /produtos",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/produtos",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "description": "Permissão: ADMIN",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"categoriaId\": \"{{categoriaId}}\",\n  \"nome\": \"Arroz 1kg\",\n  \"sku\": \"ARROZ-001\",\n  \"codigoBarras\": \"7891234567890\",\n  \"unidade\": \"UN\",\n  \"precoCusto\": 3,\n  \"precoVenda\": 5,\n  \"estoqueMinimo\": 3,\n  \"ativo\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Atualizar Produtos — PUT /produtos/{{produtoId}}",
+      "request": {
+        "method": "PUT",
+        "url": "{{baseUrl}}/produtos/{{produtoId}}",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "description": "Permissão: ADMIN",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"categoriaId\": \"{{categoriaId}}\",\n  \"nome\": \"Arroz 1kg\",\n  \"sku\": \"ARROZ-001\",\n  \"codigoBarras\": \"7891234567890\",\n  \"unidade\": \"UN\",\n  \"precoCusto\": 3,\n  \"precoVenda\": 5,\n  \"estoqueMinimo\": 3,\n  \"ativo\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Listar Fornecedores — GET /fornecedores",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/fornecedores",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "description": "Permissão: Autenticado"
+      }
+    },
+    {
+      "name": "Criar Fornecedores — POST /fornecedores",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/fornecedores",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "description": "Permissão: ADMIN",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"razaoSocial\": \"Fornecedor exemplo LTDA\",\n  \"nomeFantasia\": \"Fornecedor exemplo\",\n  \"cnpj\": \"12345678000199\",\n  \"telefone\": \"(53) 99999-9999\",\n  \"email\": \"fornecedor@example.com\",\n  \"ativo\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Atualizar Fornecedores — PUT /fornecedores/{{fornecedorId}}",
+      "request": {
+        "method": "PUT",
+        "url": "{{baseUrl}}/fornecedores/{{fornecedorId}}",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "description": "Permissão: ADMIN",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"razaoSocial\": \"Fornecedor exemplo LTDA\",\n  \"nomeFantasia\": \"Fornecedor exemplo\",\n  \"cnpj\": \"12345678000199\",\n  \"telefone\": \"(53) 99999-9999\",\n  \"email\": \"fornecedor@example.com\",\n  \"ativo\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Listar Clientes — GET /clientes",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/clientes",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "description": "Permissão: Autenticado"
+      }
+    },
+    {
+      "name": "Criar Clientes — POST /clientes",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/clientes",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "description": "Permissão: Autenticado",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nome\": \"Cliente exemplo\",\n  \"cpfCnpj\": \"12345678901\",\n  \"telefone\": \"(53) 99999-9999\",\n  \"email\": \"cliente@example.com\",\n  \"endereco\": \"Pelotas\",\n  \"limiteCredito\": 0,\n  \"ativo\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Atualizar Clientes — PUT /clientes/{{clienteId}}",
+      "request": {
+        "method": "PUT",
+        "url": "{{baseUrl}}/clientes/{{clienteId}}",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "description": "Permissão: Autenticado",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nome\": \"Cliente exemplo\",\n  \"cpfCnpj\": \"12345678901\",\n  \"telefone\": \"(53) 99999-9999\",\n  \"email\": \"cliente@example.com\",\n  \"endereco\": \"Pelotas\",\n  \"limiteCredito\": 0,\n  \"ativo\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Detalhar produto — GET /produtos/{{produtoId}}",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/produtos/{{produtoId}}",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "description": "Permissão: Autenticado"
+      }
+    },
+    {
+      "name": "Inativar produto — PATCH /produtos/{{produtoId}}/inativar",
+      "request": {
+        "method": "PATCH",
+        "url": "{{baseUrl}}/produtos/{{produtoId}}/inativar",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "description": "Permissão: ADMIN"
+      }
+    },
+    {
+      "name": "Vincular fornecedor adicional — POST /produtos/{{produtoId}}/fornecedores",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/produtos/{{produtoId}}/fornecedores",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "description": "Permissão: ADMIN",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"fornecedorId\": \"{{fornecedorId}}\",\n  \"codigoFornecedor\": \"AR-01\",\n  \"ultimoCusto\": 3\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Listar usuários — GET /usuarios",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/usuarios",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "description": "Permissão: ADMIN"
+      }
+    },
+    {
+      "name": "Criar usuário — POST /usuarios",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/usuarios",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "description": "Permissão: ADMIN",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nome\": \"Operador\",\n  \"email\": \"operador@example.com\",\n  \"senha\": \"Troque-esta-senha-123\",\n  \"perfil\": \"FUNCIONARIO\",\n  \"ativo\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Editar usuário — PATCH /usuarios/{{usuarioId}}",
+      "request": {
+        "method": "PATCH",
+        "url": "{{baseUrl}}/usuarios/{{usuarioId}}",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "description": "Permissão: ADMIN",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nome\": \"Operador atualizado\",\n  \"ativo\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Configuração da empresa — GET /configuracoes",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/configuracoes",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "description": "Permissão: Autenticado"
+      }
+    },
+    {
+      "name": "Atualizar empresa — PUT /configuracoes",
+      "request": {
+        "method": "PUT",
+        "url": "{{baseUrl}}/configuracoes",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "description": "Permissão: ADMIN",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"razaoSocial\": \"Mercadinho LTDA\",\n  \"nomeFantasia\": \"Mercadinho\",\n  \"cnpj\": \"12345678000199\",\n  \"inscricaoEstadual\": \"\",\n  \"telefone\": \"\",\n  \"email\": \"\",\n  \"endereco\": \"\",\n  \"cidade\": \"Pelotas\",\n  \"ambienteNFCe\": \"HOMOLOGACAO\",\n  \"impressoraPadrao\": \"\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Histórico de estoque — GET /estoque/movimentacoes",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/estoque/movimentacoes",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "description": "Permissão: Autenticado"
+      }
+    },
+    {
+      "name": "Entrada inicial — POST /estoque/movimentacoes",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/estoque/movimentacoes",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "description": "Permissão: ADMIN",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"produtoId\": \"{{produtoId}}\",\n  \"tipo\": \"ENTRADA\",\n  \"quantidade\": 10,\n  \"observacao\": \"Saldo inicial\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Listar caixas — GET /caixas",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/caixas",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "description": "Permissão: ADMIN ou próprio"
+      }
+    },
+    {
+      "name": "Caixa atual — GET /caixas/atual",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/caixas/atual",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "description": "Permissão: Autenticado"
+      }
+    },
+    {
+      "name": "Detalhar caixa e saldo — GET /caixas/{{caixaId}}",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/caixas/{{caixaId}}",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "description": "Permissão: ADMIN ou próprio"
+      }
+    },
+    {
+      "name": "Abrir caixa — POST /caixas/abrir",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/caixas/abrir",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "description": "Permissão: Autenticado",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"valorInicial\": 100\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Sangria/reforço — POST /caixas/{{caixaId}}/operacoes",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/caixas/{{caixaId}}/operacoes",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "description": "Permissão: ADMIN ou próprio",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tipo\": \"SANGRIA\",\n  \"valor\": 10,\n  \"observacao\": \"Retirada para cofre\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Fechar caixa — POST /caixas/{{caixaId}}/fechar",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/caixas/{{caixaId}}/fechar",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "description": "Permissão: ADMIN ou próprio",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"valorFinal\": 100,\n  \"observacao\": \"Conferência de fechamento\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Listar vendas — GET /vendas",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/vendas",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "description": "Permissão: ADMIN ou próprias"
+      }
+    },
+    {
+      "name": "Detalhar venda — GET /vendas/{{vendaId}}",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/vendas/{{vendaId}}",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "description": "Permissão: ADMIN ou própria"
+      }
+    },
+    {
+      "name": "Finalizar venda — POST /vendas",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/vendas",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "description": "Permissão: Autenticado",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"caixaId\": \"{{caixaId}}\",\n  \"chaveIdempotencia\": \"{{chaveVenda}}\",\n  \"itens\": [\n    {\n      \"produtoId\": \"{{produtoId}}\",\n      \"quantidade\": 1\n    }\n  ],\n  \"pagamentos\": [\n    {\n      \"forma\": \"DINHEIRO\",\n      \"valor\": 5\n    }\n  ],\n  \"desconto\": 0\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Cancelar venda — POST /vendas/{{vendaId}}/cancelar",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/vendas/{{vendaId}}/cancelar",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "description": "Permissão: ADMIN",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"motivo\": \"Venda registrada por engano\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Listar compras — GET /compras",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/compras",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "description": "Permissão: ADMIN"
+      }
+    },
+    {
+      "name": "Detalhar compra — GET /compras/{{compraId}}",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/compras/{{compraId}}",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "description": "Permissão: ADMIN"
+      }
+    },
+    {
+      "name": "Criar pedido de compra — POST /compras",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/compras",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "description": "Permissão: ADMIN",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"fornecedorId\": \"{{fornecedorId}}\",\n  \"numeroNota\": \"123\",\n  \"itens\": [\n    {\n      \"produtoId\": \"{{produtoId}}\",\n      \"quantidade\": 5,\n      \"custoUnitario\": 3\n    }\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Receber compra — POST /compras/{{compraId}}/receber",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/compras/{{compraId}}/receber",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "description": "Permissão: ADMIN"
+      }
+    },
+    {
+      "name": "Cancelar compra pendente — POST /compras/{{compraId}}/cancelar",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/compras/{{compraId}}/cancelar",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "description": "Permissão: ADMIN"
+      }
+    },
+    {
+      "name": "Listar lançamentos — GET /financeiro",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/financeiro",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "description": "Permissão: ADMIN"
+      }
+    },
+    {
+      "name": "Criar lançamento manual — POST /financeiro",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/financeiro",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "description": "Permissão: ADMIN",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tipo\": \"DESPESA\",\n  \"descricao\": \"Conta de energia\",\n  \"valor\": 150,\n  \"vencimento\": \"2026-12-01T03:00:00.000Z\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Marcar lançamento como pago — POST /financeiro/{{lancamentoId}}/pagar",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/financeiro/{{lancamentoId}}/pagar",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "description": "Permissão: ADMIN"
+      }
+    },
+    {
+      "name": "Cancelar lançamento manual pendente — POST /financeiro/{{lancamentoId}}/cancelar",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/financeiro/{{lancamentoId}}/cancelar",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "description": "Permissão: ADMIN"
+      }
+    },
+    {
+      "name": "Listar conferências do caixa — GET /conciliacoes",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/conciliacoes",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "description": "Permissão: ADMIN"
+      }
+    },
+    {
+      "name": "Indicadores — GET /dashboard",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/dashboard",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "description": "Permissão: ADMIN"
+      }
+    }
+  ]
+}
