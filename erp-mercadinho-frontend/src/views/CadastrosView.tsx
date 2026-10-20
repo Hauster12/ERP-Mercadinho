@@ -72,7 +72,21 @@ export const CadastrosView: React.FC = () => {
 
       try {
         const empRes = await api.getConfiguracoes();
-        setEmpresa(empRes);
+        if (empRes) {
+          setEmpresa({
+            id: empRes.id ?? 1,
+            razaoSocial: empRes.razaoSocial ?? '',
+            nomeFantasia: empRes.nomeFantasia ?? '',
+            cnpj: empRes.cnpj ?? '',
+            inscricaoEstadual: empRes.inscricaoEstadual ?? '',
+            telefone: empRes.telefone ?? '',
+            email: empRes.email ?? '',
+            endereco: empRes.endereco ?? '',
+            cidade: empRes.cidade ?? '',
+            ambienteNFCe: empRes.ambienteNFCe ?? 'HOMOLOGACAO',
+            impressoraPadrao: empRes.impressoraPadrao ?? '',
+          });
+        }
       } catch {}
     } catch (err: any) {
       error('Erro ao listar cadastros', err.message);
@@ -84,6 +98,18 @@ export const CadastrosView: React.FC = () => {
   }, []);
 
   // Handlers
+  const handleToggleUsuarioAtivo = async (u: Usuario, novoStatus: boolean) => {
+    try {
+      setSalvando(true);
+      await api.updateUsuario(u.id, { ativo: novoStatus });
+      success(`Usuário ${u.nome} foi ${novoStatus ? 'reativado' : 'desativado'} com sucesso!`);
+      await carregarDados();
+    } catch (err: any) {
+      error('Erro ao atualizar usuário', err.message);
+    } finally {
+      setSalvando(false);
+    }
+  };
   const handleCriarCliente = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -389,32 +415,68 @@ export const CadastrosView: React.FC = () => {
                 <th className="py-3 px-3">NOME</th>
                 <th className="py-3 px-3">E-MAIL</th>
                 <th className="py-3 px-3">PERFIL</th>
-                <th className="py-3 px-3 text-right">STATUS</th>
+                <th className="py-3 px-3">STATUS</th>
+                <th className="py-3 px-3 text-right">AÇÕES</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {usuarios.map((u) => (
-                <tr key={u.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="py-3 px-3 font-bold text-slate-900">{u.nome}</td>
-                  <td className="py-3 px-3 font-mono text-slate-500">{u.email}</td>
-                  <td className="py-3 px-3">
-                    <span
-                      className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase ${
-                        u.perfil === 'ADMIN'
-                          ? 'bg-amber-100 text-amber-900 border border-amber-200'
-                          : 'bg-cyan-100 text-cyan-900 border border-cyan-200'
-                      }`}
-                    >
-                      {u.perfil}
-                    </span>
-                  </td>
-                  <td className="py-3 px-3 text-right">
-                    <span className="px-1.5 py-0.5 rounded text-[10px] font-mono uppercase font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                      {u.ativo ? 'Ativo' : 'Inativo'}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+              {usuarios.map((u) => {
+                const isCurrentUser = u.id === user?.id;
+                return (
+                  <tr key={u.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="py-3 px-3 font-bold text-slate-900">
+                      {u.nome}
+                      {isCurrentUser && (
+                        <span className="ml-2 text-[10px] text-cyan-700 font-mono font-normal">
+                          (Você)
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-3 px-3 font-mono text-slate-500">{u.email}</td>
+                    <td className="py-3 px-3">
+                      <span
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase ${
+                          u.perfil === 'ADMIN'
+                            ? 'bg-amber-100 text-amber-900 border border-amber-200'
+                            : 'bg-cyan-100 text-cyan-900 border border-cyan-200'
+                        }`}
+                      >
+                        {u.perfil}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3">
+                      <span
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-mono uppercase font-bold ${
+                          u.ativo
+                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                            : 'bg-rose-100 text-rose-800 border border-rose-200'
+                        }`}
+                      >
+                        {u.ativo ? 'Ativo' : 'Inativo'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 text-right">
+                      {isCurrentUser ? (
+                        <span className="text-[11px] font-mono text-slate-400">
+                          Conta em uso
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleToggleUsuarioAtivo(u, !u.ativo)}
+                          disabled={salvando}
+                          className={`px-2.5 py-1 text-xs font-bold rounded-lg border transition-colors cursor-pointer disabled:opacity-50 ${
+                            u.ativo
+                              ? 'text-rose-700 bg-rose-50 hover:bg-rose-100 border-rose-200'
+                              : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border-emerald-200'
+                          }`}
+                        >
+                          {u.ativo ? 'Desativar' : 'Reativar'}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -427,13 +489,14 @@ export const CadastrosView: React.FC = () => {
             Dados da Empresa & Emissão
           </h3>
           <form onSubmit={handleSalvarEmpresa} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-mono font-bold uppercase text-slate-700 mb-1">
-                  Razão Social
+                  Razão Social *
                 </label>
                 <input
                   type="text"
+                  required
                   value={empresa.razaoSocial}
                   onChange={(e) => setEmpresa({ ...empresa, razaoSocial: e.target.value })}
                   className="w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 px-3 py-2 rounded-lg text-xs outline-none font-medium"
@@ -452,16 +515,76 @@ export const CadastrosView: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-mono font-bold uppercase text-slate-700 mb-1">
-                  CNPJ
+                  CNPJ (somente números)
                 </label>
                 <input
                   type="text"
                   value={empresa.cnpj}
-                  onChange={(e) => setEmpresa({ ...empresa, cnpj: e.target.value })}
+                  maxLength={14}
+                  onChange={(e) => setEmpresa({ ...empresa, cnpj: e.target.value.replace(/\D/g, '') })}
                   className="w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 px-3 py-2 rounded-lg text-xs outline-none font-mono font-medium"
+                  placeholder="00000000000000"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-mono font-bold uppercase text-slate-700 mb-1">
+                  Inscrição Estadual
+                </label>
+                <input
+                  type="text"
+                  value={empresa.inscricaoEstadual}
+                  maxLength={30}
+                  onChange={(e) => setEmpresa({ ...empresa, inscricaoEstadual: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 px-3 py-2 rounded-lg text-xs outline-none font-mono font-medium"
+                  placeholder="Isento ou nº da IE"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-mono font-bold uppercase text-slate-700 mb-1">
+                  Telefone / WhatsApp
+                </label>
+                <input
+                  type="text"
+                  value={empresa.telefone}
+                  maxLength={30}
+                  onChange={(e) => setEmpresa({ ...empresa, telefone: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 px-3 py-2 rounded-lg text-xs outline-none font-medium"
+                  placeholder="(00) 00000-0000"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-mono font-bold uppercase text-slate-700 mb-1">
+                  E-mail de Contato
+                </label>
+                <input
+                  type="email"
+                  value={empresa.email}
+                  maxLength={254}
+                  onChange={(e) => setEmpresa({ ...empresa, email: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 px-3 py-2 rounded-lg text-xs outline-none font-medium"
+                  placeholder="contato@empresa.com"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-mono font-bold uppercase text-slate-700 mb-1">
+                  Endereço
+                </label>
+                <input
+                  type="text"
+                  value={empresa.endereco}
+                  maxLength={500}
+                  onChange={(e) => setEmpresa({ ...empresa, endereco: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 px-3 py-2 rounded-lg text-xs outline-none font-medium"
+                  placeholder="Rua, número, bairro"
                 />
               </div>
               <div>
@@ -471,8 +594,10 @@ export const CadastrosView: React.FC = () => {
                 <input
                   type="text"
                   value={empresa.cidade}
+                  maxLength={100}
                   onChange={(e) => setEmpresa({ ...empresa, cidade: e.target.value })}
                   className="w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 px-3 py-2 rounded-lg text-xs outline-none font-medium"
+                  placeholder="Nome da Cidade - UF"
                 />
               </div>
             </div>

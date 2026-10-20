@@ -13,6 +13,7 @@ const tabTitles: Record<ActiveTab, { title: string; subtitle: string }> = {
   pdv: { title: 'Ponto de Venda', subtitle: 'Operação de caixa e vendas rápidas' },
   dashboard: { title: 'Dashboard Executivo', subtitle: 'Métricas e faturamento em tempo real' },
   produtos: { title: 'Produtos & Estoque', subtitle: 'Catálogo de itens, preços e níveis de estoque' },
+  compras: { title: 'Gestão de Compras', subtitle: 'Pedidos aos fornecedores, entrada de mercadorias e custos' },
   caixa: { title: 'Gestão de Caixa', subtitle: 'Abertura, fechamento, sangrias e conciliação' },
   vendas: { title: 'Histórico de Vendas', subtitle: 'Extrato de cupons, cancelamentos e pagamentos' },
   estoque: { title: 'Movimentações de Estoque', subtitle: 'Kardex de entradas, saídas e ajustes físicos' },

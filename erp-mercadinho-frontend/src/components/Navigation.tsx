@@ -6,6 +6,7 @@ export type ActiveTab =
   | 'pdv'
   | 'dashboard'
   | 'produtos'
+  | 'compras'
   | 'caixa'
   | 'vendas'
   | 'estoque'
@@ -37,6 +38,7 @@ export const Navigation: React.FC<NavigationProps> = ({
     { id: 'pdv', label: 'PDV / Caixa Rápido', badge: 'PDV' },
     { id: 'dashboard', label: 'Dashboard', adminOnly: true },
     { id: 'produtos', label: 'Produtos & Estoque' },
+    { id: 'compras', label: 'Compras & Pedidos', adminOnly: true },
     { id: 'caixa', label: 'Gestão de Caixa' },
     { id: 'vendas', label: 'Histórico de Vendas' },
     { id: 'estoque', label: 'Movimentações' },

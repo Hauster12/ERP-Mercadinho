@@ -11,6 +11,7 @@ import { CaixaView } from './views/CaixaView';
 import { VendasView } from './views/VendasView';
 import { EstoqueView } from './views/EstoqueView';
 import { FinanceiroView } from './views/FinanceiroView';
+import { ComprasView } from './views/ComprasView';
 import { CadastrosView } from './views/CadastrosView';
 import { api } from './services/api';
 import { X } from 'lucide-react';
@@ -99,6 +100,7 @@ const MainLayout: React.FC = () => {
           {activeTab === 'pdv' && <PdvView />}
           {activeTab === 'dashboard' && <DashboardView setActiveTab={setActiveTab} />}
           {activeTab === 'produtos' && <ProdutosView />}
+          {activeTab === 'compras' && <ComprasView />}
           {activeTab === 'caixa' && <CaixaView />}
           {activeTab === 'vendas' && <VendasView />}
           {activeTab === 'estoque' && <EstoqueView />}

@@ -184,6 +184,16 @@ export interface LancamentoFinanceiro {
   criadoEm: string;
 }
 
+export interface ItemPedidoCompra {
+  id: string;
+  pedidoCompraId: string;
+  produtoId: string;
+  produtoNome: string;
+  quantidade: number;
+  custoUnitario: number;
+  subtotal: number;
+}
+
 export interface PedidoCompra {
   id: string;
   fornecedorId: string;
@@ -194,6 +204,8 @@ export interface PedidoCompra {
   status: 'PENDENTE' | 'RECEBIDO' | 'CANCELADO';
   criadoEm: string;
   recebidoEm?: string | null;
+  itens?: ItemPedidoCompra[];
+  usuario?: { nome: string };
 }
 
 export interface ConfiguracaoEmpresa {
