@@ -44,11 +44,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const initAuth = async () => {
-      const token = api.getToken();
-      if (token) {
-        await refreshUser();
+      try {
+        const token = api.getToken();
+        if (token) {
+          await refreshUser();
+        }
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     initAuth();

@@ -73,7 +73,7 @@ export const VendasView: React.FC = () => {
   };
 
   return (
-    <div className="p-4 lg:p-6 space-y-5">
+    <div className="p-3 sm:p-4 lg:p-6 space-y-5">
       {/* Top Banner */}
       <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-xs flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -91,8 +91,91 @@ export const VendasView: React.FC = () => {
         </div>
       </div>
 
+      <div className="space-y-3 md:hidden">
+        {loading ? (
+          <div className="rounded-xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
+            Carregando histórico de vendas...
+          </div>
+        ) : vendas.length === 0 ? (
+          <div className="rounded-xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
+            Nenhuma venda realizada até o momento.
+          </div>
+        ) : (
+          vendas.map((v) => {
+            const cancelada = v.status === 'CANCELADA';
+            return (
+              <article
+                key={v.id}
+                className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-slate-900">
+                      {v.clienteNome || 'Consumidor Final'}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {new Date(v.criadoEm).toLocaleString('pt-BR')}
+                    </p>
+                  </div>
+                  <span
+                    className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase ${
+                      cancelada
+                        ? 'border-rose-200 bg-rose-100 text-rose-800'
+                        : 'border-emerald-200 bg-emerald-100 text-emerald-800'
+                    }`}
+                  >
+                    {v.status}
+                  </span>
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-3 border-t border-slate-100 pt-3 text-xs">
+                  <div>
+                    <p className="text-slate-500">Total</p>
+                    <p className="mt-1 font-mono font-extrabold text-amber-700">
+                      R$ {Number(v.valorTotal).toFixed(2)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Desconto</p>
+                    <p className="mt-1 font-mono font-semibold text-slate-700">
+                      R$ {Number(v.desconto || 0).toFixed(2)}
+                    </p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-slate-500">Operador</p>
+                    <p className="mt-1 font-medium text-slate-800">
+                      {v.usuarioNome || 'Operador'}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-3 flex gap-2 border-t border-slate-100 pt-3">
+                  <button
+                    onClick={() => verDetalhes(v.id)}
+                    className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-bold text-slate-700 hover:bg-slate-100"
+                  >
+                    <Eye className="h-4 w-4" />
+                    Ver cupom
+                  </button>
+                  {isAdmin && !cancelada && (
+                    <button
+                      onClick={() => {
+                        setVendaParaCancelar(v);
+                        setModalCancelarAberto(true);
+                      }}
+                      className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 text-xs font-bold text-rose-700 hover:bg-rose-100"
+                    >
+                      <Ban className="h-4 w-4" />
+                      Cancelar
+                    </button>
+                  )}
+                </div>
+              </article>
+            );
+          })
+        )}
+      </div>
+
       {/* Sales Table */}
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+      <div className="hidden overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs md:block">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 text-slate-600 font-mono border-b border-slate-200">
