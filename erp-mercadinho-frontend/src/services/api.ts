@@ -13,7 +13,7 @@ import type {
   ConfiguracaoEmpresa
 } from '../types';
 
-const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api').replace(/\/$/, '');
+const BASE_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '');
 
 let currentToken: string | null = localStorage.getItem('nexus_erp_token');
 
@@ -33,6 +33,8 @@ export const api = {
 
   async request<T>(path: string, method = 'GET', body?: unknown): Promise<T> {
     const headers: Record<string, string> = {};
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 10000);
 
     if (body !== undefined) {
       headers['Content-Type'] = 'application/json';
@@ -42,11 +44,22 @@ export const api = {
       headers['Authorization'] = `Bearer ${currentToken}`;
     }
 
-    const response = await fetch(`${BASE_URL}${path}`, {
-      method,
-      headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
+    let response: Response;
+    try {
+      response = await fetch(`${BASE_URL}${path}`, {
+        method,
+        headers,
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+        signal: controller.signal,
+      });
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        throw new Error('A conexão com o servidor excedeu o tempo limite. Verifique a rede e tente novamente.');
+      }
+      throw new Error('Não foi possível conectar ao servidor. Verifique se o celular está na mesma rede Wi-Fi.');
+    } finally {
+      window.clearTimeout(timeout);
+    }
 
     let data: any;
     try {

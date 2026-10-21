@@ -240,7 +240,7 @@ export const PdvView: React.FC = () => {
   // If cash is not open, show Open Cash Register screen
   if (!caixaAtual || caixaAtual.status !== 'ABERTO') {
     return (
-      <div className="p-4 lg:p-8 flex items-center justify-center min-h-[calc(100vh-5rem)]">
+      <div className="p-3 sm:p-4 lg:p-8 flex items-center justify-center min-h-[calc(100vh-5rem)]">
         <div className="w-full max-w-lg bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 text-center shadow-lg">
           <div className="w-16 h-16 rounded-2xl bg-cyan-50 border border-cyan-200 text-cyan-700 flex items-center justify-center mx-auto mb-5">
             <Receipt className="w-8 h-8" />
@@ -288,7 +288,7 @@ export const PdvView: React.FC = () => {
   }
 
   return (
-    <div className="p-3 lg:p-5 flex flex-col xl:flex-row gap-5 min-h-[calc(100vh-4rem)]">
+    <div className="p-3 sm:p-4 lg:p-5 flex flex-col xl:flex-row gap-4 sm:gap-5 min-h-[calc(100vh-4rem)]">
       {/* LEFT COLUMN: Catalog & Rapid Barcode Search */}
       <div className="flex-1 flex flex-col gap-4 min-w-0">
         {/* Rapid Search Bar */}
@@ -311,10 +311,10 @@ export const PdvView: React.FC = () => {
           </div>
 
           {/* Category Chips Filter */}
-          <div className="flex items-center gap-1.5 mt-3 overflow-x-auto pb-1 scrollbar-none">
+          <div className="flex flex-wrap items-center gap-1.5 mt-3">
             <button
               onClick={() => setCategoriaAtiva('todas')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors cursor-pointer ${
+              className={`max-w-full min-w-0 min-h-11 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors cursor-pointer ${
                 categoriaAtiva === 'todas'
                   ? 'bg-cyan-600 text-white shadow-xs'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'
@@ -328,10 +328,12 @@ export const PdvView: React.FC = () => {
                 <button
                   key={cat.id}
                   onClick={() => setCategoriaAtiva(cat.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors cursor-pointer ${
-                    categoriaAtiva === cat.id
-                      ? 'bg-cyan-600 text-white shadow-xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'
+                title={cat.nome}
+                aria-label={`Filtrar categoria ${cat.nome}`}
+                className={`max-w-full min-w-0 min-h-11 truncate px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors cursor-pointer ${
+                  categoriaAtiva === cat.id
+                    ? 'bg-cyan-600 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'
                   }`}
                 >
                   {cat.nome}
@@ -341,7 +343,7 @@ export const PdvView: React.FC = () => {
         </div>
 
         {/* Product Catalog Grid */}
-        <div className="flex-1 bg-white border border-slate-200 rounded-xl p-3.5 overflow-y-auto max-h-[calc(100vh-16rem)] shadow-xs">
+        <div className="flex-1 bg-white border border-slate-200 rounded-xl p-3.5 overflow-y-auto max-h-[42vh] md:max-h-[48vh] xl:max-h-[calc(100vh-16rem)] shadow-xs">
           {loading ? (
             <div className="h-64 flex items-center justify-center text-slate-400 text-sm">
               Carregando catálogo de produtos...
@@ -403,7 +405,7 @@ export const PdvView: React.FC = () => {
       </div>
 
       {/* RIGHT COLUMN: Interactive Cart & Checkout Terminal */}
-      <div className="w-full xl:w-[420px] 2xl:w-[460px] bg-white border border-slate-200 rounded-xl flex flex-col shadow-lg overflow-hidden shrink-0">
+      <div className="w-full xl:w-[420px] 2xl:w-[460px] bg-white border border-slate-200 rounded-xl flex flex-col shadow-lg overflow-visible xl:overflow-hidden shrink-0">
         {/* Terminal Header */}
         <div className="p-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -424,7 +426,7 @@ export const PdvView: React.FC = () => {
             <select
               value={clienteId}
               onChange={(e) => setClienteId(e.target.value)}
-              className="flex-1 bg-slate-50 border border-slate-300 text-xs text-slate-900 rounded-lg px-2.5 py-1.5 outline-none focus:border-cyan-600 font-medium"
+              className="w-full min-w-0 flex-1 bg-slate-50 border border-slate-300 text-xs text-slate-900 rounded-lg px-2.5 py-1.5 outline-none focus:border-cyan-600 font-medium"
             >
               <option value="">Consumidor Final (Não identificado)</option>
               {clientes
@@ -439,7 +441,7 @@ export const PdvView: React.FC = () => {
         </div>
 
         {/* Cart Item List */}
-        <div className="flex-1 p-3 overflow-y-auto space-y-2 min-h-[220px] max-h-[350px]">
+        <div className="flex-1 p-3 overflow-y-auto space-y-2 min-h-[150px] max-h-[32vh] md:max-h-[38vh] xl:min-h-[220px] xl:max-h-[350px]">
           {carrinho.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-slate-400 py-12">
               <Barcode className="w-10 h-10 mb-2 opacity-30 text-cyan-600" />
@@ -619,7 +621,7 @@ export const PdvView: React.FC = () => {
           <button
             onClick={handleFinalizarVenda}
             disabled={finalizando || carrinho.length === 0}
-            className="w-full py-3.5 px-4 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-black text-sm tracking-wide transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            className="sticky bottom-2 z-10 w-full py-3.5 px-4 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-black text-sm tracking-wide transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 xl:static xl:shadow-md"
           >
             <CheckCircle className="w-5 h-5" />
             <span>{finalizando ? 'Processando Venda...' : `FINALIZAR VENDA (R$ ${total.toFixed(2)})`}</span>

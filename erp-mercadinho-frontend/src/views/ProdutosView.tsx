@@ -185,7 +185,7 @@ export const ProdutosView: React.FC = () => {
   });
 
   return (
-    <div className="p-4 lg:p-6 space-y-5">
+    <div className="p-3 sm:p-4 lg:p-6 space-y-5">
       {/* Top action bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white border border-slate-200 p-4 rounded-xl shadow-xs">
         <div className="flex items-center gap-3">

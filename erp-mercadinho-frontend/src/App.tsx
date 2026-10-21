@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider, useToast } from './context/ToastContext';
 import { Navigation, type ActiveTab } from './components/Navigation';
@@ -21,12 +21,21 @@ const MainLayout: React.FC = () => {
   const { success, error } = useToast();
   const [activeTab, setActiveTab] = useState<ActiveTab>('pdv');
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    const preference = localStorage.getItem('nexus-sidebar-collapsed');
+    if (preference !== null) return preference === 'true';
+    return window.matchMedia('(min-width: 768px) and (max-width: 1279px)').matches;
+  });
 
   // Quick cash modal state triggered from Header
   const [quickCashModal, setQuickCashModal] = useState<'SANGRIA' | 'REFORCO' | null>(null);
   const [quickCashValor, setQuickCashValor] = useState('50.00');
   const [quickCashObs, setQuickCashObs] = useState('');
   const [submittingCash, setSubmittingCash] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('nexus-sidebar-collapsed', String(sidebarCollapsed));
+  }, [sidebarCollapsed]);
 
   if (loading) {
     return (
@@ -75,20 +84,22 @@ const MainLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col lg:flex-row font-sans">
+    <div className="min-h-screen bg-[#F8FAFC] flex flex-col md:flex-row font-sans">
       {/* Sidebar Navigation */}
       <Navigation
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         mobileOpen={mobileOpen}
         setMobileOpen={setMobileOpen}
+        collapsed={sidebarCollapsed}
+        setCollapsed={setSidebarCollapsed}
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 lg:pl-64">
+      <div className={`flex-1 flex flex-col min-w-0 transition-[padding] duration-300 ease-in-out motion-reduce:transition-none ${sidebarCollapsed ? 'md:pl-20' : 'md:pl-64'}`}>
         <Header
           activeTab={activeTab}
-          setMobileOpen={setMobileOpen}
+          onOpenNavigation={() => setMobileOpen(true)}
           onOpenQuickCashModal={(tipo) => {
             setQuickCashModal(tipo);
             setQuickCashValor('50.00');
@@ -96,7 +107,7 @@ const MainLayout: React.FC = () => {
           }}
         />
 
-        <main className="flex-1 bg-[#F8FAFC]">
+        <main className="app-main flex-1 bg-[#F8FAFC]">
           {activeTab === 'pdv' && <PdvView />}
           {activeTab === 'dashboard' && <DashboardView setActiveTab={setActiveTab} />}
           {activeTab === 'produtos' && <ProdutosView />}

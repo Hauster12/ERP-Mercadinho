@@ -28,9 +28,8 @@ export const LoginView: React.FC = () => {
     }
   };
 
-  const handleFillAdmin = () => {
+  const handleFillAdminEmail = () => {
     setEmail('admin@mercadinho.local');
-    setSenha('senhaforte123');
   };
 
   return (
@@ -71,7 +70,7 @@ export const LoginView: React.FC = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="operador@mercadinho.local"
                 required
-                className="w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 pl-10 pr-3.5 py-2.5 rounded-lg text-sm outline-none transition-colors placeholder:text-slate-400"
+                className="min-h-11 w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 pl-10 pr-3.5 py-2.5 rounded-lg text-sm outline-none transition-colors placeholder:text-slate-400"
               />
             </div>
           </div>
@@ -90,7 +89,7 @@ export const LoginView: React.FC = () => {
                 onChange={(e) => setSenha(e.target.value)}
                 placeholder="••••••••••••"
                 required
-                className="w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 pl-10 pr-3.5 py-2.5 rounded-lg text-sm outline-none transition-colors placeholder:text-slate-400"
+                className="min-h-11 w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 pl-10 pr-3.5 py-2.5 rounded-lg text-sm outline-none transition-colors placeholder:text-slate-400"
               />
             </div>
           </div>
@@ -109,11 +108,11 @@ export const LoginView: React.FC = () => {
         <div className="mt-6 pt-5 border-t border-slate-100">
           <button
             type="button"
-            onClick={handleFillAdmin}
-            className="w-full py-2.5 px-3 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700 flex items-center justify-center gap-2 transition-colors font-mono cursor-pointer"
+            onClick={handleFillAdminEmail}
+            className="min-h-11 w-full py-2.5 px-3 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700 flex items-center justify-center gap-2 transition-colors font-mono cursor-pointer"
           >
             <Zap className="w-4 h-4 text-amber-600" />
-            <span>Preencher como Administrador Padrão</span>
+            <span>Preencher e-mail do administrador</span>
           </button>
           <div className="flex items-center justify-center gap-1.5 mt-3 text-[11px] text-slate-400 font-medium">
             <ShieldCheck className="w-3.5 h-3.5 text-cyan-700" />

@@ -5,7 +5,7 @@ import type { ActiveTab } from './Navigation';
 
 interface HeaderProps {
   activeTab: ActiveTab;
-  setMobileOpen: (open: boolean) => void;
+  onOpenNavigation: () => void;
   onOpenQuickCashModal?: (tipo: 'SANGRIA' | 'REFORCO') => void;
 }
 
@@ -23,7 +23,7 @@ const tabTitles: Record<ActiveTab, { title: string; subtitle: string }> = {
 
 export const Header: React.FC<HeaderProps> = ({
   activeTab,
-  setMobileOpen,
+  onOpenNavigation,
   onOpenQuickCashModal,
 }) => {
   const { caixaAtual } = useAuth();
@@ -49,7 +49,7 @@ export const Header: React.FC<HeaderProps> = ({
   useEffect(() => {
     const checkConnection = async () => {
       try {
-        const res = await fetch('http://localhost:3000/api/health');
+        const res = await fetch('/api/health');
         setConnected(res.ok);
       } catch {
         setConnected(false);
@@ -63,28 +63,30 @@ export const Header: React.FC<HeaderProps> = ({
   const currentInfo = tabTitles[activeTab];
 
   return (
-    <header className="h-16 px-4 lg:px-6 bg-white border-b border-slate-200 flex items-center justify-between sticky top-0 z-30">
+    <header className="min-h-16 px-3 sm:px-4 lg:px-6 py-2 bg-white border-b border-slate-200 flex items-center justify-between gap-2 sticky top-0 z-30">
       {/* Left: Mobile trigger & Page info */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
         <button
-          onClick={() => setMobileOpen(true)}
-          className="lg:hidden p-2 text-slate-500 hover:text-slate-900 rounded-lg hover:bg-slate-100"
+          onClick={onOpenNavigation}
+          aria-label="Abrir menu"
+          title="Abrir menu lateral"
+          className="min-w-11 min-h-11 shrink-0 md:hidden flex items-center justify-center p-2 text-slate-500 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-colors duration-200"
         >
           <Menu className="w-5 h-5" />
         </button>
 
-        <div>
-          <h1 className="text-base lg:text-lg font-bold text-slate-900 font-['Syne'] tracking-tight flex items-center gap-2">
+        <div className="min-w-0">
+          <h1 className="text-sm sm:text-base lg:text-lg font-bold text-slate-900 font-['Syne'] tracking-tight truncate">
             {currentInfo.title}
           </h1>
-          <p className="text-[11px] text-slate-500 hidden sm:block">
+          <p className="text-[11px] text-slate-500 hidden md:block truncate">
             {currentInfo.subtitle}
           </p>
         </div>
       </div>
 
       {/* Right: Quick actions, cash status & live indicators */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
         {/* Quick cash operation buttons if cash is open */}
         {caixaAtual?.status === 'ABERTO' && onOpenQuickCashModal && (
           <div className="hidden md:flex items-center gap-1.5 bg-slate-50 p-1 rounded-lg border border-slate-200">
@@ -111,7 +113,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* API connection indicator */}
         <div
-          title={connected ? 'Conectado à API (localhost:3000)' : 'Desconectado da API'}
+          title={connected ? 'Conectado à API' : 'Desconectado da API'}
           className={`flex items-center gap-1.5 px-2.5 py-1 rounded border text-xs font-mono font-semibold ${
             connected
               ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
