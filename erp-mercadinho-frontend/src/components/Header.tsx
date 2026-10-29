@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Wifi, WifiOff, Clock } from 'lucide-react';
+import { Menu, Wifi, WifiOff, Clock, Bell } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { BASE_URL } from '../services/api';
 import type { ActiveTab } from './Navigation';
 
 interface HeaderProps {
   activeTab: ActiveTab;
   setMobileOpen: (open: boolean) => void;
   onOpenQuickCashModal?: (tipo: 'SANGRIA' | 'REFORCO') => void;
+  avisosAdminCount?: number;
+  onOpenAvisosAdmin?: () => void;
 }
 
 const tabTitles: Record<ActiveTab, { title: string; subtitle: string }> = {
@@ -19,14 +22,17 @@ const tabTitles: Record<ActiveTab, { title: string; subtitle: string }> = {
   estoque: { title: 'Movimentações de Estoque', subtitle: 'Kardex de entradas, saídas e ajustes físicos' },
   financeiro: { title: 'Controle Financeiro', subtitle: 'Fluxo de despesas, receitas e liquidações' },
   cadastros: { title: 'Cadastros Gerais', subtitle: 'Clientes, fornecedores, categorias e usuários' },
+  avisarAdmin: { title: 'Mensagem ao Administrador', subtitle: 'Envio de chamados e solicitações urgentes ao admin' },
 };
 
 export const Header: React.FC<HeaderProps> = ({
   activeTab,
   setMobileOpen,
   onOpenQuickCashModal,
+  avisosAdminCount = 0,
+  onOpenAvisosAdmin,
 }) => {
-  const { caixaAtual } = useAuth();
+  const { user, caixaAtual } = useAuth();
   const [time, setTime] = useState<string>('');
   const [connected, setConnected] = useState(true);
 
@@ -49,7 +55,7 @@ export const Header: React.FC<HeaderProps> = ({
   useEffect(() => {
     const checkConnection = async () => {
       try {
-        const res = await fetch('http://localhost:3000/api/health');
+        const res = await fetch(`${BASE_URL}/health`);
         setConnected(res.ok);
       } catch {
         setConnected(false);
@@ -85,6 +91,31 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Right: Quick actions, cash status & live indicators */}
       <div className="flex items-center gap-3">
+        {/* Admin Recados / Avisos Button */}
+        {user?.perfil === 'ADMIN' && onOpenAvisosAdmin && (
+          <button
+            type="button"
+            onClick={onOpenAvisosAdmin}
+            title={
+              avisosAdminCount > 0
+                ? `${avisosAdminCount} aviso(s) dos caixas pendente(s)`
+                : 'Avisos e recados dos caixas'
+            }
+            className={`relative p-2 rounded-lg border transition-all cursor-pointer ${
+              avisosAdminCount > 0
+                ? 'bg-amber-50 border-amber-300 text-amber-800 hover:bg-amber-100'
+                : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <Bell className="w-4 h-4" />
+            {avisosAdminCount > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white shadow-xs animate-pulse">
+                {avisosAdminCount}
+              </span>
+            )}
+          </button>
+        )}
+
         {/* Quick cash operation buttons if cash is open */}
         {caixaAtual?.status === 'ABERTO' && onOpenQuickCashModal && (
           <div className="hidden md:flex items-center gap-1.5 bg-slate-50 p-1 rounded-lg border border-slate-200">
@@ -111,7 +142,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* API connection indicator */}
         <div
-          title={connected ? 'Conectado à API (localhost:3000)' : 'Desconectado da API'}
+          title={connected ? `Conectado à API (${BASE_URL})` : 'Desconectado da API'}
           className={`flex items-center gap-1.5 px-2.5 py-1 rounded border text-xs font-mono font-semibold ${
             connected
               ? 'bg-emerald-50 border-emerald-200 text-emerald-700'

@@ -80,6 +80,7 @@ export interface OperacaoCaixa {
 
 export interface Caixa {
   id: string;
+  numeroCaixa?: number;
   usuarioId: string;
   usuario?: Usuario;
   usuarioNome?: string;
@@ -220,4 +221,23 @@ export interface ConfiguracaoEmpresa {
   cidade: string;
   ambienteNFCe: string;
   impressoraPadrao: string;
+}
+
+export interface RecadoOperador {
+  id: string;
+  caixaId?: string;
+  numeroCaixa?: number;
+  usuarioNome: string;
+  mensagem: string;
+  criadoEm: string;
+}
+
+export interface AvisoAdmin {
+  id: string;
+  caixaId?: string;
+  numeroCaixa?: number;
+  usuarioNome: string;
+  recadoAdmin: string;
+  conferencia?: string;
+  criadoEm: string;
 }

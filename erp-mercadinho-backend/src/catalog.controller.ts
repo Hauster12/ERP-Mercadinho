@@ -5,6 +5,7 @@ import {
   Post,
   Put,
   Patch,
+  Delete,
   Param,
   ParseUUIDPipe,
   Query,
@@ -209,6 +210,15 @@ export class CatalogController {
   ) {
     return this.db.cliente.update({ where: { id }, data: dados });
   }
+  @Admin() @Delete("clientes/:id") async clienteDelete(
+    @Param("id", ParseUUIDPipe) id: string,
+  ) {
+    const temVendas = await this.db.venda.count({ where: { clienteId: id } });
+    if (temVendas > 0) {
+      return this.db.cliente.update({ where: { id }, data: { ativo: false } });
+    }
+    return this.db.cliente.delete({ where: { id } });
+  }
   @Admin() @Get("usuarios") usuarios(@Query() paginacao: PageDto) {
     return this.db.usuario.findMany({
       ...page(paginacao),
@@ -250,14 +260,50 @@ export class CatalogController {
       select: userSelect,
     });
   }
+  @Admin() @Delete("usuarios/:id") async usuarioDelete(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Req() requisicao: AuthRequest,
+  ) {
+    if (id === requisicao.user.id) {
+      throw new BadRequestException("Não é possível excluir seu próprio usuário");
+    }
+    const temHistorico =
+      (await this.db.venda.count({ where: { usuarioId: id } })) > 0 ||
+      (await this.db.caixa.count({ where: { usuarioId: id } })) > 0 ||
+      (await this.db.pedidoCompra.count({ where: { usuarioId: id } })) > 0;
+    if (temHistorico) {
+      return this.db.usuario.update({
+        where: { id },
+        data: { ativo: false },
+        select: userSelect,
+      });
+    }
+    return this.db.usuario.delete({
+      where: { id },
+      select: userSelect,
+    });
+  }
   @Get("configuracoes") config() {
     return this.db.configuracaoEmpresa.findUnique({ where: { id: 1 } });
   }
   @Admin() @Put("configuracoes") configUpdate(@Body() dados: ConfiguracaoDto) {
+    const { id, atualizadoEm, ...resto } = dados as any;
+    const cleanData = {
+      razaoSocial: resto.razaoSocial || "",
+      nomeFantasia: resto.nomeFantasia || "",
+      cnpj: resto.cnpj || "",
+      inscricaoEstadual: resto.inscricaoEstadual || "",
+      telefone: resto.telefone || "",
+      email: resto.email || "",
+      endereco: resto.endereco || "",
+      cidade: resto.cidade || "",
+      ambienteNFCe: resto.ambienteNFCe || "HOMOLOGACAO",
+      impressoraPadrao: resto.impressoraPadrao || "",
+    };
     return this.db.configuracaoEmpresa.upsert({
       where: { id: 1 },
-      create: { id: 1, ...dados },
-      update: dados,
+      create: { id: 1, ...cleanData },
+      update: cleanData,
     });
   }
 }

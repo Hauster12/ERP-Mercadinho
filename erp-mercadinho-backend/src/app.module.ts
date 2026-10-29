@@ -19,7 +19,7 @@ import { HealthController } from "./health.controller";
         signOptions: { expiresIn: "8h", algorithm: "HS256" },
       }),
     }),
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 120 }]),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 3000 }]),
   ],
   controllers: [
     AuthController,

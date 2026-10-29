@@ -19,18 +19,31 @@ export function validateEnvironment() {
       !process.env[campo]?.startsWith("postgres://")
     )
       throw Error("Configure " + campo);
-  if (!process.env.CORS_ORIGINS) throw Error("Configure CORS_ORIGINS");
 }
 export async function createApp() {
   validateEnvironment();
   const app = await NestFactory.create(AppModule, {
     logger: new LoggerPortugues(),
   });
-  app.use(helmet());
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: false,
+      crossOriginEmbedderPolicy: false,
+      crossOriginOpenerPolicy: false,
+    }),
+  );
   app.setGlobalPrefix("api");
   app.enableCors({
-    origin: process.env.CORS_ORIGINS!.split(",").map((origem) => origem.trim()),
-    credentials: false,
+    origin: true,
+    methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
+    credentials: true,
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "Accept",
+      "X-Requested-With",
+      "Origin",
+    ],
   });
   app.useGlobalPipes(
     new ValidationPipe({

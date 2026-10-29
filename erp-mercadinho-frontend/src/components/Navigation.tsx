@@ -11,13 +11,15 @@ export type ActiveTab =
   | 'vendas'
   | 'estoque'
   | 'financeiro'
-  | 'cadastros';
+  | 'cadastros'
+  | 'avisarAdmin';
 
 interface NavigationProps {
   activeTab: ActiveTab;
   setActiveTab: (tab: ActiveTab) => void;
   mobileOpen: boolean;
   setMobileOpen: (open: boolean) => void;
+  onAbrirCaixaModal?: () => void;
 }
 
 export const Navigation: React.FC<NavigationProps> = ({
@@ -25,6 +27,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   setActiveTab,
   mobileOpen,
   setMobileOpen,
+  onAbrirCaixaModal,
 }) => {
   const { user, caixaAtual, logout } = useAuth();
   const isAdmin = user?.perfil === 'ADMIN';
@@ -44,6 +47,7 @@ export const Navigation: React.FC<NavigationProps> = ({
     { id: 'estoque', label: 'Movimentações' },
     { id: 'financeiro', label: 'Financeiro', adminOnly: true },
     { id: 'cadastros', label: 'Cadastros Gerais' },
+    { id: 'avisarAdmin', label: 'Mensagem ao Admin', badge: 'SOS' },
   ];
 
   const handleSelect = (tab: ActiveTab) => {
@@ -92,11 +96,21 @@ export const Navigation: React.FC<NavigationProps> = ({
               }`}
             />
             <span className="text-xs font-semibold text-slate-700">
-              {caixaAtual?.status === 'ABERTO' ? 'Caixa Aberto' : 'Caixa Fechado'}
+              {caixaAtual?.status === 'ABERTO'
+                ? `Caixa 0${caixaAtual.numeroCaixa || 1} Aberto`
+                : 'Caixa Fechado'}
             </span>
           </div>
           <button
-            onClick={() => handleSelect('caixa')}
+            onClick={() => {
+              if (caixaAtual?.status === 'ABERTO') {
+                handleSelect('caixa');
+              } else if (onAbrirCaixaModal) {
+                onAbrirCaixaModal();
+              } else {
+                handleSelect('caixa');
+              }
+            }}
             className="text-[11px] font-mono font-bold text-cyan-700 hover:text-cyan-800 hover:underline cursor-pointer"
           >
             {caixaAtual?.status === 'ABERTO' ? 'Ver Saldo' : 'Abrir'}

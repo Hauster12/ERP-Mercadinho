@@ -12,12 +12,13 @@ import {
   Receipt,
   User,
   Sparkles,
-  Printer
+  Printer,
+  AlertTriangle
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import type { Produto, Categoria, Cliente, PaymentMethod } from '../types';
+import type { Produto, Categoria, Cliente, PaymentMethod, RecadoOperador } from '../types';
 
 interface CartItem {
   produto: Produto;
@@ -51,9 +52,33 @@ export const PdvView: React.FC = () => {
   // Sale Success Modal
   const [vendaConcluida, setVendaConcluida] = useState<any | null>(null);
 
-  // Open Cash Register Modal
+  // Open Cash Register State
+  const [numeroCaixaEscolhido, setNumeroCaixaEscolhido] = useState<number>(1);
   const [valorInicialAbertura, setValorInicialAbertura] = useState('100.00');
+  const [recadoTurnoAbertura, setRecadoTurnoAbertura] = useState<RecadoOperador | null>(null);
+  const [carregandoRecadoAbertura, setCarregandoRecadoAbertura] = useState(false);
   const [abrindoCaixa, setAbrindoCaixa] = useState(false);
+
+  // Monitor shift notes for the chosen register when cash is closed
+  useEffect(() => {
+    if (!caixaAtual || caixaAtual.status !== 'ABERTO') {
+      let cancel = false;
+      setCarregandoRecadoAbertura(true);
+      api.getUltimoRecadoCaixa(numeroCaixaEscolhido)
+        .then((rec) => {
+          if (!cancel) setRecadoTurnoAbertura(rec);
+        })
+        .catch(() => {
+          if (!cancel) setRecadoTurnoAbertura(null);
+        })
+        .finally(() => {
+          if (!cancel) setCarregandoRecadoAbertura(false);
+        });
+      return () => {
+        cancel = true;
+      };
+    }
+  }, [caixaAtual?.status, numeroCaixaEscolhido]);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -227,9 +252,9 @@ export const PdvView: React.FC = () => {
     try {
       setAbrindoCaixa(true);
       const val = parseFloat(valorInicialAbertura) || 0;
-      await api.abrirCaixa(val);
+      await api.abrirCaixa(val, numeroCaixaEscolhido);
       await refreshCaixa();
-      success('Caixa aberto com sucesso!', `Suprimento inicial: R$ ${val.toFixed(2)}`);
+      success('Caixa aberto com sucesso!', `Caixa 0${numeroCaixaEscolhido} iniciado com R$ ${val.toFixed(2)}`);
     } catch (err: any) {
       error('Erro ao abrir caixa', err.message);
     } finally {
@@ -250,13 +275,60 @@ export const PdvView: React.FC = () => {
             Caixa Operacional Fechado
           </h2>
           <p className="text-sm text-slate-500 mt-2 max-w-md mx-auto">
-            Para iniciar os lançamentos de vendas e emitir comprovantes, é necessário abrir o turno de caixa informando o valor de suprimento inicial (fundo de troco).
+            Selecione qual ponto de atendimento deseja operar e informe o fundo de troco para iniciar as vendas.
           </p>
 
           <form onSubmit={handleAbrirCaixa} className="mt-6 space-y-4">
+            {/* Escolha entre Caixa 01 e Caixa 02 */}
+            <div className="text-left">
+              <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-700 mb-2">
+                Ponto de Venda (Terminal) *
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                {[1, 2].map((num) => {
+                  const ativo = numeroCaixaEscolhido === num;
+                  return (
+                    <button
+                      key={num}
+                      type="button"
+                      onClick={() => setNumeroCaixaEscolhido(num)}
+                      className={`py-3 px-4 rounded-xl border text-sm font-bold font-mono transition-all cursor-pointer text-center ${
+                        ativo
+                          ? 'bg-cyan-600 border-cyan-600 text-white shadow-xs'
+                          : 'bg-slate-50 hover:bg-slate-100 border-slate-300 text-slate-700'
+                      }`}
+                    >
+                      Caixa 0{num}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Shift Note for this specific register */}
+            {carregandoRecadoAbertura ? (
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-500 text-center animate-pulse">
+                Verificando avisos do turno anterior para Caixa 0{numeroCaixaEscolhido}...
+              </div>
+            ) : recadoTurnoAbertura?.mensagem ? (
+              <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 space-y-1.5 text-left">
+                <div className="flex items-center gap-2 text-xs font-bold text-amber-800">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>Aviso do Turno Anterior (Caixa 0{numeroCaixaEscolhido}):</span>
+                </div>
+                <p className="text-xs text-slate-800 font-medium whitespace-pre-wrap">
+                  {recadoTurnoAbertura.mensagem}
+                </p>
+                <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono pt-1">
+                  <span>Operador: <strong>{recadoTurnoAbertura.usuarioNome}</strong></span>
+                  <span>{new Date(recadoTurnoAbertura.criadoEm).toLocaleString('pt-BR')}</span>
+                </div>
+              </div>
+            ) : null}
+
             <div className="text-left">
               <label className="block text-xs font-mono font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                Fundo de Troco / Suprimento Inicial (R$)
+                Fundo de Troco / Suprimento Inicial (R$) *
               </label>
               <div className="relative">
                 <span className="absolute left-3.5 top-3 text-slate-400 font-mono text-sm">R$</span>
@@ -279,7 +351,7 @@ export const PdvView: React.FC = () => {
               className="w-full py-3.5 px-4 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-extrabold text-sm tracking-wide transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               <Sparkles className="w-4 h-4" />
-              <span>{abrindoCaixa ? 'Abrindo Caixa...' : 'Abrir Caixa e Iniciar Vendas'}</span>
+              <span>{abrindoCaixa ? 'Abrindo Caixa...' : `Abrir Caixa 0${numeroCaixaEscolhido} e Iniciar Vendas`}</span>
             </button>
           </form>
         </div>

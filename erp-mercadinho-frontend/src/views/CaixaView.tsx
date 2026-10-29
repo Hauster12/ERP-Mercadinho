@@ -6,7 +6,8 @@ import {
   Lock,
   History,
   RefreshCw,
-  X
+  X,
+  AlertTriangle
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -32,7 +33,16 @@ export const CaixaView: React.FC = () => {
   const [modalFechamentoAberto, setModalFechamentoAberto] = useState(false);
   const [valorFinalContado, setValorFinalContado] = useState('');
   const [obsFechamento, setObsFechamento] = useState('Conferência de turno');
+  const [recadoProximoOperador, setRecadoProximoOperador] = useState('');
   const [fechando, setFechando] = useState(false);
+
+  // Open Cash Register Modal (directly from CaixaView if closed)
+  const [modalAberturaAberto, setModalAberturaAberto] = useState(false);
+  const [abrirNumeroCaixa, setAbrirNumeroCaixa] = useState<number>(1);
+  const [abrirValorInicial, setAbrirValorInicial] = useState('100.00');
+  const [recadoAbertura, setRecadoAbertura] = useState<any | null>(null);
+  const [carregandoRecadoAbertura, setCarregandoRecadoAbertura] = useState(false);
+  const [abrindoTurno, setAbrindoTurno] = useState(false);
 
   const carregarHistorico = async () => {
     try {
@@ -61,6 +71,26 @@ export const CaixaView: React.FC = () => {
     setModalOperacaoAberto(true);
   };
 
+  useEffect(() => {
+    if (modalAberturaAberto) {
+      let cancel = false;
+      setCarregandoRecadoAbertura(true);
+      api.getUltimoRecadoCaixa(abrirNumeroCaixa)
+        .then((r) => {
+          if (!cancel) setRecadoAbertura(r);
+        })
+        .catch(() => {
+          if (!cancel) setRecadoAbertura(null);
+        })
+        .finally(() => {
+          if (!cancel) setCarregandoRecadoAbertura(false);
+        });
+      return () => {
+        cancel = true;
+      };
+    }
+  }, [modalAberturaAberto, abrirNumeroCaixa]);
+
   const handleSalvarOperacao = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!caixaAtual) return;
@@ -88,6 +118,23 @@ export const CaixaView: React.FC = () => {
     }
   };
 
+  const handleAbrirCaixa = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setAbrindoTurno(true);
+      const val = parseFloat(abrirValorInicial) || 0;
+      await api.abrirCaixa(val, abrirNumeroCaixa);
+      success('Turno de caixa aberto com sucesso!', `Caixa 0${abrirNumeroCaixa} iniciado com R$ ${val.toFixed(2)}`);
+      setModalAberturaAberto(false);
+      await refreshCaixa();
+      carregarHistorico();
+    } catch (err: any) {
+      error('Erro ao abrir caixa', err.message);
+    } finally {
+      setAbrindoTurno(false);
+    }
+  };
+
   const handleFecharCaixa = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!caixaAtual) return;
@@ -98,10 +145,13 @@ export const CaixaView: React.FC = () => {
       await api.fecharCaixa(caixaAtual.id, {
         valorFinal,
         observacao: obsFechamento,
+        recadoProximoOperador: recadoProximoOperador.trim() || undefined,
+        numeroCaixa: caixaAtual.numeroCaixa || 1,
       });
 
       success('Caixa fechado com sucesso!');
       setModalFechamentoAberto(false);
+      setRecadoProximoOperador('');
       await refreshCaixa();
       carregarHistorico();
     } catch (err: any) {
@@ -132,7 +182,9 @@ export const CaixaView: React.FC = () => {
                       : 'bg-rose-100 text-rose-800 border border-rose-200'
                   }`}
                 >
-                  {caixaAtual?.status === 'ABERTO' ? 'ABERTO' : 'FECHADO'}
+                  {caixaAtual?.status === 'ABERTO'
+                    ? `CAIXA 0${caixaAtual.numeroCaixa || 1} ABERTO`
+                    : 'FECHADO'}
                 </span>
               </div>
               <p className="text-xs text-slate-500 font-mono mt-0.5">
@@ -145,7 +197,7 @@ export const CaixaView: React.FC = () => {
           </div>
 
           {/* Cash Actions */}
-          {caixaAtual?.status === 'ABERTO' && (
+          {caixaAtual?.status === 'ABERTO' ? (
             <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={() => abrirModalOperacao('REFORCO')}
@@ -174,6 +226,14 @@ export const CaixaView: React.FC = () => {
                 <span>Fechar Turno</span>
               </button>
             </div>
+          ) : (
+            <button
+              onClick={() => setModalAberturaAberto(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-extrabold text-xs shadow-xs transition-all cursor-pointer"
+            >
+              <Vault className="w-4 h-4" />
+              <span>Abrir Turno de Caixa</span>
+            </button>
           )}
         </div>
 
@@ -406,6 +466,24 @@ export const CaixaView: React.FC = () => {
                 />
               </div>
 
+              <div className="pt-1 border-t border-slate-100 space-y-3">
+                <div>
+                  <label className="block text-xs font-mono font-bold uppercase text-slate-700 mb-1 flex items-center gap-1.5">
+                    <span className="text-cyan-700 font-bold">💬</span> Recado para o Próximo Atendente do Caixa 0{caixaAtual?.numeroCaixa || 1}
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={recadoProximoOperador}
+                    onChange={(e) => setRecadoProximoOperador(e.target.value)}
+                    placeholder="Ex: Caixa com problema para abrir gaveta, notas organizadas..."
+                    className="w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 px-3 py-2 rounded-lg text-xs outline-none resize-none"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-0.5">
+                    Aparecerá exclusivamente em pop-up para o próximo funcionário que entrar no Caixa 0{caixaAtual?.numeroCaixa || 1}.
+                  </p>
+                </div>
+              </div>
+
               <div className="flex gap-2 pt-2">
                 <button
                   type="button"
@@ -420,6 +498,115 @@ export const CaixaView: React.FC = () => {
                   className="flex-1 py-2.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs cursor-pointer disabled:opacity-50"
                 >
                   {fechando ? 'Processando...' : 'Confirmar Fechamento'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ABERTURA DE CAIXA MODAL */}
+      {modalAberturaAberto && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-lg bg-cyan-100 text-cyan-800">
+                  <Vault className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 font-['Syne']">
+                    Abertura de Turno de Caixa
+                  </h3>
+                  <p className="text-xs text-slate-500">Selecione o caixa e informe o suprimento inicial</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setModalAberturaAberto(false)}
+                className="text-slate-400 hover:text-slate-700 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAbrirCaixa} className="space-y-4">
+              {/* Escolha do Caixa */}
+              <div>
+                <label className="block text-xs font-mono font-bold uppercase text-slate-700 mb-2">
+                  Selecione o Caixa *
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  {[1, 2].map((num) => {
+                    const ativo = abrirNumeroCaixa === num;
+                    return (
+                      <button
+                        key={num}
+                        type="button"
+                        onClick={() => setAbrirNumeroCaixa(num)}
+                        className={`py-3 px-4 rounded-xl border text-sm font-bold font-mono transition-all cursor-pointer text-center ${
+                          ativo
+                            ? 'bg-cyan-600 border-cyan-600 text-white shadow-xs'
+                            : 'bg-slate-50 hover:bg-slate-100 border-slate-300 text-slate-700'
+                        }`}
+                      >
+                        Caixa 0{num}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Recado específico do caixa selecionado se houver */}
+              {carregandoRecadoAbertura ? (
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-500 text-center animate-pulse">
+                  Verificando avisos do turno anterior para Caixa 0{abrirNumeroCaixa}...
+                </div>
+              ) : recadoAbertura?.mensagem ? (
+                <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 space-y-1.5 text-left">
+                  <div className="flex items-center gap-2 text-xs font-bold text-amber-800">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>Aviso do Turno Anterior (Caixa 0{abrirNumeroCaixa}):</span>
+                  </div>
+                  <p className="text-xs text-slate-800 font-medium whitespace-pre-wrap">
+                    {recadoAbertura.mensagem}
+                  </p>
+                  <p className="text-[10px] text-slate-500 font-mono">
+                    Deixado por <strong>{recadoAbertura.usuarioNome}</strong> em{' '}
+                    {new Date(recadoAbertura.criadoEm).toLocaleString('pt-BR')}
+                  </p>
+                </div>
+              ) : null}
+
+              <div>
+                <label className="block text-xs font-mono font-bold uppercase text-slate-700 mb-1">
+                  Fundo de Troco Inicial (R$) *
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={abrirValorInicial}
+                  onChange={(e) => setAbrirValorInicial(e.target.value)}
+                  required
+                  autoFocus
+                  className="w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 px-3 py-2.5 rounded-lg text-lg font-mono outline-none"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setModalAberturaAberto(false)}
+                  className="flex-1 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-xs font-bold text-slate-700 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={abrindoTurno}
+                  className="flex-1 py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-extrabold text-xs cursor-pointer disabled:opacity-50"
+                >
+                  {abrindoTurno ? 'Abrindo...' : `Abrir Caixa 0${abrirNumeroCaixa}`}
                 </button>
               </div>
             </form>

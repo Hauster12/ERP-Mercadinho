@@ -10,10 +10,12 @@ import type {
   MovimentacaoEstoque,
   LancamentoFinanceiro,
   PedidoCompra,
-  ConfiguracaoEmpresa
+  ConfiguracaoEmpresa,
+  RecadoOperador,
+  AvisoAdmin
 } from '../types';
 
-const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api').replace(/\/$/, '');
+export const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api').replace(/\/$/, '');
 
 let currentToken: string | null = localStorage.getItem('nexus_erp_token');
 
@@ -42,11 +44,19 @@ export const api = {
       headers['Authorization'] = `Bearer ${currentToken}`;
     }
 
-    const response = await fetch(`${BASE_URL}${path}`, {
-      method,
-      headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
+    let response: Response;
+    try {
+      response = await fetch(`${BASE_URL}${path}`, {
+        method,
+        headers,
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+      });
+    } catch (netErr: any) {
+      console.error(`[API Network Error] ${method} ${path}:`, netErr);
+      throw new Error(
+        `Sem conexão com o servidor (${BASE_URL}). Verifique se o backend está em execução.`
+      );
+    }
 
     let data: any;
     try {
@@ -169,8 +179,8 @@ export const api = {
     return this.request<Caixa>(`/caixas/${id}`);
   },
 
-  async abrirCaixa(valorInicial: number) {
-    return this.request<Caixa>('/caixas/abrir', 'POST', { valorInicial });
+  async abrirCaixa(valorInicial: number, numeroCaixa = 1) {
+    return this.request<Caixa>('/caixas/abrir', 'POST', { valorInicial, numeroCaixa });
   },
 
   async registrarOperacaoCaixa(caixaId: string, payload: {
@@ -181,8 +191,35 @@ export const api = {
     return this.request<any>(`/caixas/${caixaId}/operacoes`, 'POST', payload);
   },
 
-  async fecharCaixa(caixaId: string, payload: { valorFinal: number; observacao?: string }) {
+  async fecharCaixa(caixaId: string, payload: {
+    valorFinal: number;
+    observacao?: string;
+    recadoProximoOperador?: string;
+    recadoAdmin?: string;
+    numeroCaixa?: number;
+  }) {
     return this.request<any>(`/caixas/${caixaId}/fechar`, 'POST', payload);
+  },
+
+  async getUltimoRecadoCaixa(numeroCaixa?: number) {
+    const qs = numeroCaixa ? `?numeroCaixa=${numeroCaixa}` : '';
+    return this.request<RecadoOperador | null>(`/caixas/ultimo-recado${qs}`);
+  },
+
+  async enviarAvisoAdmin(payload: { mensagem: string; numeroCaixa?: number }) {
+    return this.request<{ ok: boolean; aviso: any }>('/caixas/avisar-admin', 'POST', payload);
+  },
+
+  async getAvisosAdmin() {
+    return this.request<AvisoAdmin[]>('/caixas/avisos-admin');
+  },
+
+  async dispensarAvisoAdmin(id: string) {
+    return this.request<{ ok: boolean }>(`/caixas/avisos-admin/${id}/dispensar`, 'POST');
+  },
+
+  async dispensarTodosAvisosAdmin() {
+    return this.request<{ ok: boolean }>('/caixas/avisos-admin/dispensar-todos', 'POST');
   },
 
   // Vendas
@@ -261,6 +298,10 @@ export const api = {
     ativo?: boolean;
   }) {
     return this.request<Cliente>(`/clientes/${id}`, 'PUT', payload);
+  },
+
+  async deleteCliente(id: string) {
+    return this.request<any>(`/clientes/${id}`, 'DELETE');
   },
 
   // Fornecedores
@@ -353,9 +394,16 @@ export const api = {
 
   async updateUsuario(id: string, payload: {
     nome?: string;
+    email?: string;
+    senha?: string;
+    perfil?: 'ADMIN' | 'FUNCIONARIO';
     ativo?: boolean;
   }) {
     return this.request<Usuario>(`/usuarios/${id}`, 'PATCH', payload);
+  },
+
+  async deleteUsuario(id: string) {
+    return this.request<any>(`/usuarios/${id}`, 'DELETE');
   },
 
   // Configurações

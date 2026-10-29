@@ -189,6 +189,11 @@ export class AbrirCaixaDto {
   @Min(0)
   @Max(999999999)
   valorInicial!: number;
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(10)
+  numeroCaixa?: number;
 }
 export class OperacaoDto {
   @IsEnum(["SANGRIA", "REFORCO"]) tipo!: "SANGRIA" | "REFORCO";
@@ -208,8 +213,31 @@ export class FecharCaixaDto {
   valorFinal!: number;
   @IsOptional()
   @IsString()
-  @MaxLength(500)
+  @MaxLength(1000)
   observacao?: string;
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  recadoProximoOperador?: string;
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  recadoAdmin?: string;
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(10)
+  numeroCaixa?: number;
+}
+export class AvisarAdminDto {
+  @IsString()
+  @Length(2, 500)
+  mensagem!: string;
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(10)
+  numeroCaixa?: number;
 }
 export class ItemVendaDto {
   @IsUUID() produtoId!: string;
@@ -286,32 +314,48 @@ export class FinanceiroDto {
   @IsISO8601() vencimento!: string;
 }
 export class ConfiguracaoDto {
+  @IsOptional()
+  @IsNumber()
+  id?: number;
   @IsString()
   @MaxLength(150)
   razaoSocial!: string;
+  @IsOptional()
   @IsString()
   @MaxLength(150)
-  nomeFantasia!: string;
-  @Matches(/^(|\d{14})$/) cnpj!: string;
+  nomeFantasia?: string;
+  @IsOptional()
+  @Matches(/^(|\d{14})$/)
+  cnpj?: string;
+  @IsOptional()
   @IsString()
   @MaxLength(30)
-  inscricaoEstadual!: string;
+  inscricaoEstadual?: string;
+  @IsOptional()
   @IsString()
   @MaxLength(30)
-  telefone!: string;
+  telefone?: string;
+  @IsOptional()
   @IsString()
   @MaxLength(254)
-  email!: string;
+  email?: string;
+  @IsOptional()
   @IsString()
   @MaxLength(500)
-  endereco!: string;
+  endereco?: string;
+  @IsOptional()
   @IsString()
   @MaxLength(100)
-  cidade!: string;
-  @IsEnum(["HOMOLOGACAO"]) ambienteNFCe!: string;
+  cidade?: string;
+  @IsOptional()
+  @IsEnum(["HOMOLOGACAO"])
+  ambienteNFCe?: string;
+  @IsOptional()
   @IsString()
   @MaxLength(150)
-  impressoraPadrao!: string;
+  impressoraPadrao?: string;
+  @IsOptional()
+  atualizadoEm?: any;
 }
 export class PageDto {
   @IsOptional()

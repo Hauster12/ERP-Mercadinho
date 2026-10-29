@@ -6,7 +6,9 @@ import {
   Shield,
   Building,
   Plus,
-  X
+  X,
+  Trash2,
+  Pencil
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -28,7 +30,7 @@ export const CadastrosView: React.FC = () => {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [empresa, setEmpresa] = useState<ConfiguracaoEmpresa | null>(null);
 
-  // Modal State
+  // Modal State - Criação
   const [modalCliente, setModalCliente] = useState(false);
   const [cliNome, setCliNome] = useState('');
   const [cliCpf, setCliCpf] = useState('');
@@ -49,6 +51,35 @@ export const CadastrosView: React.FC = () => {
   const [usrEmail, setUsrEmail] = useState('');
   const [usrSenha, setUsrSenha] = useState('');
   const [usrPerfil, setUsrPerfil] = useState<'ADMIN' | 'FUNCIONARIO'>('FUNCIONARIO');
+
+  // Modal State - Edição
+  const [clienteEditando, setClienteEditando] = useState<Cliente | null>(null);
+  const [editCliNome, setEditCliNome] = useState('');
+  const [editCliCpf, setEditCliCpf] = useState('');
+  const [editCliTel, setEditCliTel] = useState('');
+  const [editCliEmail, setEditCliEmail] = useState('');
+  const [editCliEndereco, setEditCliEndereco] = useState('');
+  const [editCliAtivo, setEditCliAtivo] = useState(true);
+
+  const [fornecedorEditando, setFornecedorEditando] = useState<Fornecedor | null>(null);
+  const [editFornRazao, setEditFornRazao] = useState('');
+  const [editFornFantasia, setEditFornFantasia] = useState('');
+  const [editFornCnpj, setEditFornCnpj] = useState('');
+  const [editFornTel, setEditFornTel] = useState('');
+  const [editFornEmail, setEditFornEmail] = useState('');
+  const [editFornAtivo, setEditFornAtivo] = useState(true);
+
+  const [categoriaEditando, setCategoriaEditando] = useState<Categoria | null>(null);
+  const [editCatNome, setEditCatNome] = useState('');
+  const [editCatDesc, setEditCatDesc] = useState('');
+  const [editCatAtivo, setEditCatAtivo] = useState(true);
+
+  const [usuarioEditando, setUsuarioEditando] = useState<Usuario | null>(null);
+  const [editUsrNome, setEditUsrNome] = useState('');
+  const [editUsrEmail, setEditUsrEmail] = useState('');
+  const [editUsrPerfil, setEditUsrPerfil] = useState<'ADMIN' | 'FUNCIONARIO'>('FUNCIONARIO');
+  const [editUsrSenha, setEditUsrSenha] = useState('');
+  const [editUsrAtivo, setEditUsrAtivo] = useState(true);
 
   const [salvando, setSalvando] = useState(false);
 
@@ -203,14 +234,194 @@ export const CadastrosView: React.FC = () => {
     }
   };
 
+  const handleExcluirCliente = async (c: Cliente) => {
+    if (
+      !window.confirm(
+        `Tem certeza que deseja excluir o cliente "${c.nome}"? Se ele possuir vendas registradas, ele será inativado para manter a integridade do histórico.`
+      )
+    ) {
+      return;
+    }
+    try {
+      setSalvando(true);
+      await api.deleteCliente(c.id);
+      success(`Cliente "${c.nome}" removido/inativado com sucesso!`);
+      await carregarDados();
+    } catch (err: any) {
+      error('Erro ao excluir cliente', err.message);
+    } finally {
+      setSalvando(false);
+    }
+  };
+
+  const handleExcluirUsuario = async (u: Usuario) => {
+    if (u.id === user?.id) {
+      error('Ação não permitida', 'Você não pode excluir seu próprio usuário.');
+      return;
+    }
+    if (
+      !window.confirm(
+        `Tem certeza que deseja excluir o usuário "${u.nome}"? Se ele possuir histórico de caixas, compras ou vendas, ele será inativado automaticamente.`
+      )
+    ) {
+      return;
+    }
+    try {
+      setSalvando(true);
+      await api.deleteUsuario(u.id);
+      success(`Usuário "${u.nome}" removido/inativado com sucesso!`);
+      await carregarDados();
+    } catch (err: any) {
+      error('Erro ao excluir usuário', err.message);
+    } finally {
+      setSalvando(false);
+    }
+  };
+
+  // Handlers de Edição
+  const handleAbrirEditarCliente = (c: Cliente) => {
+    setClienteEditando(c);
+    setEditCliNome(c.nome);
+    setEditCliCpf(c.cpfCnpj || '');
+    setEditCliTel(c.telefone || '');
+    setEditCliEmail(c.email || '');
+    setEditCliEndereco(c.endereco || '');
+    setEditCliAtivo(c.ativo !== false);
+  };
+
+  const handleSalvarEditarCliente = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!clienteEditando) return;
+    try {
+      setSalvando(true);
+      await api.updateCliente(clienteEditando.id, {
+        nome: editCliNome,
+        cpfCnpj: editCliCpf || undefined,
+        telefone: editCliTel || undefined,
+        email: editCliEmail || undefined,
+        endereco: editCliEndereco || undefined,
+        ativo: editCliAtivo,
+      });
+      success(`Cliente "${editCliNome}" atualizado com sucesso!`);
+      setClienteEditando(null);
+      await carregarDados();
+    } catch (err: any) {
+      error('Erro ao atualizar cliente', err.message);
+    } finally {
+      setSalvando(false);
+    }
+  };
+
+  const handleAbrirEditarFornecedor = (f: Fornecedor) => {
+    setFornecedorEditando(f);
+    setEditFornRazao(f.razaoSocial);
+    setEditFornFantasia(f.nomeFantasia || '');
+    setEditFornCnpj(f.cnpj || '');
+    setEditFornTel(f.telefone || '');
+    setEditFornEmail(f.email || '');
+    setEditFornAtivo(f.ativo !== false);
+  };
+
+  const handleSalvarEditarFornecedor = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fornecedorEditando) return;
+    try {
+      setSalvando(true);
+      await api.updateFornecedor(fornecedorEditando.id, {
+        razaoSocial: editFornRazao,
+        nomeFantasia: editFornFantasia || undefined,
+        cnpj: editFornCnpj || undefined,
+        telefone: editFornTel || undefined,
+        email: editFornEmail || undefined,
+        ativo: editFornAtivo,
+      });
+      success(`Fornecedor "${editFornRazao}" atualizado com sucesso!`);
+      setFornecedorEditando(null);
+      await carregarDados();
+    } catch (err: any) {
+      error('Erro ao atualizar fornecedor', err.message);
+    } finally {
+      setSalvando(false);
+    }
+  };
+
+  const handleAbrirEditarCategoria = (c: Categoria) => {
+    setCategoriaEditando(c);
+    setEditCatNome(c.nome);
+    setEditCatDesc(c.descricao || '');
+    setEditCatAtivo(c.ativo !== false);
+  };
+
+  const handleSalvarEditarCategoria = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!categoriaEditando) return;
+    try {
+      setSalvando(true);
+      await api.updateCategoria(categoriaEditando.id, {
+        nome: editCatNome,
+        descricao: editCatDesc || undefined,
+        ativo: editCatAtivo,
+      });
+      success(`Categoria "${editCatNome}" atualizada com sucesso!`);
+      setCategoriaEditando(null);
+      await carregarDados();
+    } catch (err: any) {
+      error('Erro ao atualizar categoria', err.message);
+    } finally {
+      setSalvando(false);
+    }
+  };
+
+  const handleAbrirEditarUsuario = (u: Usuario) => {
+    setUsuarioEditando(u);
+    setEditUsrNome(u.nome);
+    setEditUsrEmail(u.email);
+    setEditUsrPerfil(u.perfil);
+    setEditUsrSenha('');
+    setEditUsrAtivo(u.ativo);
+  };
+
+  const handleSalvarEditarUsuario = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!usuarioEditando) return;
+    try {
+      setSalvando(true);
+      const payload: any = {
+        nome: editUsrNome,
+        email: editUsrEmail,
+        perfil: editUsrPerfil,
+        ativo: editUsrAtivo,
+      };
+      if (editUsrSenha.trim()) {
+        if (editUsrSenha.length < 10) {
+          throw new Error('A nova senha deve ter no mínimo 10 caracteres.');
+        }
+        payload.senha = editUsrSenha;
+      }
+      await api.updateUsuario(usuarioEditando.id, payload);
+      success(`Usuário "${editUsrNome}" atualizado com sucesso!`);
+      setUsuarioEditando(null);
+      await carregarDados();
+    } catch (err: any) {
+      error('Erro ao atualizar usuário', err.message);
+    } finally {
+      setSalvando(false);
+    }
+  };
+
   const handleSalvarEmpresa = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!empresa) return;
 
     try {
       setSalvando(true);
-      await api.updateConfiguracoes(empresa);
-      success('Configurações da empresa salvas!');
+      const { id, atualizadoEm, ...resto } = empresa as any;
+      await api.updateConfiguracoes({
+        ...resto,
+        cnpj: resto.cnpj ? String(resto.cnpj).replace(/\D/g, '') : '',
+      });
+      success('Configurações da empresa salvas com sucesso!');
+      await carregarDados();
     } catch (err: any) {
       error('Erro ao salvar empresa', err.message);
     } finally {
@@ -298,13 +509,14 @@ export const CadastrosView: React.FC = () => {
                 <th className="py-3 px-3">CPF / CNPJ</th>
                 <th className="py-3 px-3">TELEFONE</th>
                 <th className="py-3 px-3">TOTAL COMPRADO</th>
-                <th className="py-3 px-3 text-right">STATUS</th>
+                <th className="py-3 px-3 text-center">STATUS</th>
+                {isAdmin && <th className="py-3 px-3 text-right">AÇÕES</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {clientes.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-6 text-center text-slate-400">
+                  <td colSpan={isAdmin ? 6 : 5} className="py-6 text-center text-slate-400">
                     Nenhum cliente cadastrado.
                   </td>
                 </tr>
@@ -317,11 +529,40 @@ export const CadastrosView: React.FC = () => {
                     <td className="py-3 px-3 font-mono text-amber-700 font-bold">
                       R$ {Number(c.totalComprado || 0).toFixed(2)}
                     </td>
-                    <td className="py-3 px-3 text-right">
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono uppercase font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                    <td className="py-3 px-3 text-center">
+                      <span
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-mono uppercase font-bold border ${
+                          c.ativo
+                            ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                            : 'bg-rose-100 text-rose-800 border-rose-200'
+                        }`}
+                      >
                         {c.ativo ? 'Ativo' : 'Inativo'}
                       </span>
                     </td>
+                    {isAdmin && (
+                      <td className="py-3 px-3 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => handleAbrirEditarCliente(c)}
+                            className="px-2 py-1 text-xs font-bold rounded-lg border transition-colors cursor-pointer text-cyan-700 bg-cyan-50 hover:bg-cyan-100 border-cyan-200 inline-flex items-center gap-1"
+                            title="Editar dados do cliente"
+                          >
+                            <Pencil className="w-3 h-3" />
+                            <span>Editar</span>
+                          </button>
+                          <button
+                            onClick={() => handleExcluirCliente(c)}
+                            disabled={salvando}
+                            className="px-2 py-1 text-xs font-bold rounded-lg border transition-colors cursor-pointer text-rose-700 bg-rose-50 hover:bg-rose-100 border-rose-200 disabled:opacity-50 inline-flex items-center gap-1"
+                            title="Excluir cliente"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                            <span>Excluir</span>
+                          </button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}
@@ -340,13 +581,14 @@ export const CadastrosView: React.FC = () => {
                 <th className="py-3 px-3">NOME FANTASIA</th>
                 <th className="py-3 px-3">CNPJ</th>
                 <th className="py-3 px-3">TELEFONE</th>
-                <th className="py-3 px-3 text-right">STATUS</th>
+                <th className="py-3 px-3 text-center">STATUS</th>
+                {isAdmin && <th className="py-3 px-3 text-right">AÇÕES</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {fornecedores.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-6 text-center text-slate-400">
+                  <td colSpan={isAdmin ? 6 : 5} className="py-6 text-center text-slate-400">
                     Nenhum fornecedor cadastrado.
                   </td>
                 </tr>
@@ -357,11 +599,29 @@ export const CadastrosView: React.FC = () => {
                     <td className="py-3 px-3 text-slate-600">{f.nomeFantasia || '-'}</td>
                     <td className="py-3 px-3 font-mono text-slate-500">{f.cnpj || '-'}</td>
                     <td className="py-3 px-3 font-mono text-slate-500">{f.telefone || '-'}</td>
-                    <td className="py-3 px-3 text-right">
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono uppercase font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                    <td className="py-3 px-3 text-center">
+                      <span
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-mono uppercase font-bold border ${
+                          f.ativo
+                            ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                            : 'bg-rose-100 text-rose-800 border-rose-200'
+                        }`}
+                      >
                         {f.ativo ? 'Ativo' : 'Inativo'}
                       </span>
                     </td>
+                    {isAdmin && (
+                      <td className="py-3 px-3 text-right">
+                        <button
+                          onClick={() => handleAbrirEditarFornecedor(f)}
+                          className="px-2 py-1 text-xs font-bold rounded-lg border transition-colors cursor-pointer text-cyan-700 bg-cyan-50 hover:bg-cyan-100 border-cyan-200 inline-flex items-center gap-1"
+                          title="Editar fornecedor"
+                        >
+                          <Pencil className="w-3 h-3" />
+                          <span>Editar</span>
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}
@@ -378,13 +638,14 @@ export const CadastrosView: React.FC = () => {
               <tr>
                 <th className="py-3 px-3">NOME DA CATEGORIA</th>
                 <th className="py-3 px-3">DESCRIÇÃO</th>
-                <th className="py-3 px-3 text-right">STATUS</th>
+                <th className="py-3 px-3 text-center">STATUS</th>
+                {isAdmin && <th className="py-3 px-3 text-right">AÇÕES</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {categorias.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="py-6 text-center text-slate-400">
+                  <td colSpan={isAdmin ? 4 : 3} className="py-6 text-center text-slate-400">
                     Nenhuma categoria cadastrada.
                   </td>
                 </tr>
@@ -393,11 +654,29 @@ export const CadastrosView: React.FC = () => {
                   <tr key={c.id} className="hover:bg-slate-50 transition-colors">
                     <td className="py-3 px-3 font-bold text-slate-900">{c.nome}</td>
                     <td className="py-3 px-3 text-slate-600">{c.descricao || '-'}</td>
-                    <td className="py-3 px-3 text-right">
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono uppercase font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                    <td className="py-3 px-3 text-center">
+                      <span
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-mono uppercase font-bold border ${
+                          c.ativo
+                            ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                            : 'bg-rose-100 text-rose-800 border-rose-200'
+                        }`}
+                      >
                         {c.ativo ? 'Ativo' : 'Inativo'}
                       </span>
                     </td>
+                    {isAdmin && (
+                      <td className="py-3 px-3 text-right">
+                        <button
+                          onClick={() => handleAbrirEditarCategoria(c)}
+                          className="px-2 py-1 text-xs font-bold rounded-lg border transition-colors cursor-pointer text-cyan-700 bg-cyan-50 hover:bg-cyan-100 border-cyan-200 inline-flex items-center gap-1"
+                          title="Editar categoria"
+                        >
+                          <Pencil className="w-3 h-3" />
+                          <span>Editar</span>
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}
@@ -456,23 +735,40 @@ export const CadastrosView: React.FC = () => {
                       </span>
                     </td>
                     <td className="py-3 px-3 text-right">
-                      {isCurrentUser ? (
-                        <span className="text-[11px] font-mono text-slate-400">
-                          Conta em uso
-                        </span>
-                      ) : (
+                      <div className="flex items-center justify-end gap-1.5">
                         <button
-                          onClick={() => handleToggleUsuarioAtivo(u, !u.ativo)}
-                          disabled={salvando}
-                          className={`px-2.5 py-1 text-xs font-bold rounded-lg border transition-colors cursor-pointer disabled:opacity-50 ${
-                            u.ativo
-                              ? 'text-rose-700 bg-rose-50 hover:bg-rose-100 border-rose-200'
-                              : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border-emerald-200'
-                          }`}
+                          onClick={() => handleAbrirEditarUsuario(u)}
+                          className="px-2 py-1 text-xs font-bold rounded-lg border transition-colors cursor-pointer text-cyan-700 bg-cyan-50 hover:bg-cyan-100 border-cyan-200 inline-flex items-center gap-1"
+                          title="Editar usuário"
                         >
-                          {u.ativo ? 'Desativar' : 'Reativar'}
+                          <Pencil className="w-3 h-3" />
+                          <span>Editar</span>
                         </button>
-                      )}
+                        {!isCurrentUser && (
+                          <>
+                            <button
+                              onClick={() => handleToggleUsuarioAtivo(u, !u.ativo)}
+                              disabled={salvando}
+                              className={`px-2.5 py-1 text-xs font-bold rounded-lg border transition-colors cursor-pointer disabled:opacity-50 ${
+                                u.ativo
+                                  ? 'text-amber-700 bg-amber-50 hover:bg-amber-100 border-amber-200'
+                                  : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border-emerald-200'
+                              }`}
+                            >
+                              {u.ativo ? 'Desativar' : 'Reativar'}
+                            </button>
+                            <button
+                              onClick={() => handleExcluirUsuario(u)}
+                              disabled={salvando}
+                              className="px-2 py-1 text-xs font-bold rounded-lg border transition-colors cursor-pointer disabled:opacity-50 text-rose-700 bg-rose-50 hover:bg-rose-100 border-rose-200 inline-flex items-center gap-1"
+                              title="Excluir funcionário"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                              <span>Excluir</span>
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
@@ -869,6 +1165,384 @@ export const CadastrosView: React.FC = () => {
                   className="flex-1 py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-extrabold text-xs cursor-pointer"
                 >
                   {salvando ? 'Salvando...' : 'Cadastrar'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* EDITAR CLIENTE MODAL */}
+      {clienteEditando && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
+              <h3 className="text-base font-bold text-slate-900 font-['Syne']">Editar Cliente</h3>
+              <button
+                onClick={() => setClienteEditando(null)}
+                className="text-slate-400 hover:text-slate-700 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <form onSubmit={handleSalvarEditarCliente} className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-mono font-bold uppercase text-slate-700 mb-1">
+                  Nome Completo *
+                </label>
+                <input
+                  type="text"
+                  value={editCliNome}
+                  onChange={(e) => setEditCliNome(e.target.value)}
+                  required
+                  className="w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 px-3 py-2 rounded-lg text-xs outline-none"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-mono font-bold uppercase text-slate-700 mb-1">
+                    CPF / CNPJ
+                  </label>
+                  <input
+                    type="text"
+                    value={editCliCpf}
+                    onChange={(e) => setEditCliCpf(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 px-3 py-2 rounded-lg text-xs outline-none font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-mono font-bold uppercase text-slate-700 mb-1">
+                    Telefone
+                  </label>
+                  <input
+                    type="text"
+                    value={editCliTel}
+                    onChange={(e) => setEditCliTel(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 px-3 py-2 rounded-lg text-xs outline-none font-mono"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-mono font-bold uppercase text-slate-700 mb-1">
+                  E-mail
+                </label>
+                <input
+                  type="email"
+                  value={editCliEmail}
+                  onChange={(e) => setEditCliEmail(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 px-3 py-2 rounded-lg text-xs outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-mono font-bold uppercase text-slate-700 mb-1">
+                  Endereço
+                </label>
+                <input
+                  type="text"
+                  value={editCliEndereco}
+                  onChange={(e) => setEditCliEndereco(e.target.value)}
+                  placeholder="Rua, número, bairro"
+                  className="w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 px-3 py-2 rounded-lg text-xs outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-mono font-bold uppercase text-slate-700 mb-1">
+                  Status do Cadastro
+                </label>
+                <select
+                  value={editCliAtivo ? 'true' : 'false'}
+                  onChange={(e) => setEditCliAtivo(e.target.value === 'true')}
+                  className="w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 px-3 py-2 rounded-lg text-xs outline-none font-bold"
+                >
+                  <option value="true">ATIVO</option>
+                  <option value="false">INATIVO</option>
+                </select>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setClienteEditando(null)}
+                  className="flex-1 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-xs font-bold text-slate-700 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={salvando}
+                  className="flex-1 py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-extrabold text-xs cursor-pointer disabled:opacity-50"
+                >
+                  {salvando ? 'Salvando...' : 'Salvar Alterações'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* EDITAR FORNECEDOR MODAL */}
+      {fornecedorEditando && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
+              <h3 className="text-base font-bold text-slate-900 font-['Syne']">Editar Fornecedor</h3>
+              <button
+                onClick={() => setFornecedorEditando(null)}
+                className="text-slate-400 hover:text-slate-700 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <form onSubmit={handleSalvarEditarFornecedor} className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-mono font-bold uppercase text-slate-700 mb-1">
+                  Razão Social *
+                </label>
+                <input
+                  type="text"
+                  value={editFornRazao}
+                  onChange={(e) => setEditFornRazao(e.target.value)}
+                  required
+                  className="w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 px-3 py-2 rounded-lg text-xs outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-mono font-bold uppercase text-slate-700 mb-1">
+                  Nome Fantasia
+                </label>
+                <input
+                  type="text"
+                  value={editFornFantasia}
+                  onChange={(e) => setEditFornFantasia(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 px-3 py-2 rounded-lg text-xs outline-none"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-mono font-bold uppercase text-slate-700 mb-1">
+                    CNPJ
+                  </label>
+                  <input
+                    type="text"
+                    value={editFornCnpj}
+                    onChange={(e) => setEditFornCnpj(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 px-3 py-2 rounded-lg text-xs outline-none font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-mono font-bold uppercase text-slate-700 mb-1">
+                    Telefone
+                  </label>
+                  <input
+                    type="text"
+                    value={editFornTel}
+                    onChange={(e) => setEditFornTel(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 px-3 py-2 rounded-lg text-xs outline-none font-mono"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-mono font-bold uppercase text-slate-700 mb-1">
+                  Status
+                </label>
+                <select
+                  value={editFornAtivo ? 'true' : 'false'}
+                  onChange={(e) => setEditFornAtivo(e.target.value === 'true')}
+                  className="w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 px-3 py-2 rounded-lg text-xs outline-none font-bold"
+                >
+                  <option value="true">ATIVO</option>
+                  <option value="false">INATIVO</option>
+                </select>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setFornecedorEditando(null)}
+                  className="flex-1 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-xs font-bold text-slate-700 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={salvando}
+                  className="flex-1 py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-extrabold text-xs cursor-pointer disabled:opacity-50"
+                >
+                  {salvando ? 'Salvando...' : 'Salvar Alterações'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* EDITAR CATEGORIA MODAL */}
+      {categoriaEditando && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
+              <h3 className="text-base font-bold text-slate-900 font-['Syne']">Editar Categoria</h3>
+              <button
+                onClick={() => setCategoriaEditando(null)}
+                className="text-slate-400 hover:text-slate-700 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <form onSubmit={handleSalvarEditarCategoria} className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-mono font-bold uppercase text-slate-700 mb-1">
+                  Nome da Categoria *
+                </label>
+                <input
+                  type="text"
+                  value={editCatNome}
+                  onChange={(e) => setEditCatNome(e.target.value)}
+                  required
+                  className="w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 px-3 py-2 rounded-lg text-xs outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-mono font-bold uppercase text-slate-700 mb-1">
+                  Descrição
+                </label>
+                <input
+                  type="text"
+                  value={editCatDesc}
+                  onChange={(e) => setEditCatDesc(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 px-3 py-2 rounded-lg text-xs outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-mono font-bold uppercase text-slate-700 mb-1">
+                  Status
+                </label>
+                <select
+                  value={editCatAtivo ? 'true' : 'false'}
+                  onChange={(e) => setEditCatAtivo(e.target.value === 'true')}
+                  className="w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 px-3 py-2 rounded-lg text-xs outline-none font-bold"
+                >
+                  <option value="true">ATIVO</option>
+                  <option value="false">INATIVO</option>
+                </select>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setCategoriaEditando(null)}
+                  className="flex-1 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-xs font-bold text-slate-700 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={salvando}
+                  className="flex-1 py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-extrabold text-xs cursor-pointer disabled:opacity-50"
+                >
+                  {salvando ? 'Salvando...' : 'Salvar Alterações'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* EDITAR USUARIO MODAL */}
+      {usuarioEditando && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
+              <h3 className="text-base font-bold text-slate-900 font-['Syne']">
+                Editar Usuário {usuarioEditando.id === user?.id && '(Você)'}
+              </h3>
+              <button
+                onClick={() => setUsuarioEditando(null)}
+                className="text-slate-400 hover:text-slate-700 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <form onSubmit={handleSalvarEditarUsuario} className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-mono font-bold uppercase text-slate-700 mb-1">
+                  Nome Completo *
+                </label>
+                <input
+                  type="text"
+                  value={editUsrNome}
+                  onChange={(e) => setEditUsrNome(e.target.value)}
+                  required
+                  className="w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 px-3 py-2 rounded-lg text-xs outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-mono font-bold uppercase text-slate-700 mb-1">
+                  E-mail *
+                </label>
+                <input
+                  type="email"
+                  value={editUsrEmail}
+                  onChange={(e) => setEditUsrEmail(e.target.value)}
+                  required
+                  className="w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 px-3 py-2 rounded-lg text-xs outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-mono font-bold uppercase text-slate-700 mb-1">
+                  Nova Senha (Opcional)
+                </label>
+                <input
+                  type="password"
+                  value={editUsrSenha}
+                  onChange={(e) => setEditUsrSenha(e.target.value)}
+                  placeholder="Deixe em branco para manter a senha atual"
+                  className="w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 px-3 py-2 rounded-lg text-xs outline-none"
+                />
+                <span className="text-[10px] text-slate-400">
+                  Se for alterar, informe no mínimo 10 caracteres.
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-mono font-bold uppercase text-slate-700 mb-1">
+                    Perfil
+                  </label>
+                  <select
+                    value={editUsrPerfil}
+                    disabled={usuarioEditando.id === user?.id}
+                    onChange={(e) => setEditUsrPerfil(e.target.value as any)}
+                    className="w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 px-3 py-2 rounded-lg text-xs outline-none font-bold disabled:opacity-60"
+                  >
+                    <option value="FUNCIONARIO">FUNCIONÁRIO</option>
+                    <option value="ADMIN">ADMINISTRADOR</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-mono font-bold uppercase text-slate-700 mb-1">
+                    Status
+                  </label>
+                  <select
+                    value={editUsrAtivo ? 'true' : 'false'}
+                    disabled={usuarioEditando.id === user?.id}
+                    onChange={(e) => setEditUsrAtivo(e.target.value === 'true')}
+                    className="w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 px-3 py-2 rounded-lg text-xs outline-none font-bold disabled:opacity-60"
+                  >
+                    <option value="true">ATIVO</option>
+                    <option value="false">INATIVO</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setUsuarioEditando(null)}
+                  className="flex-1 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-xs font-bold text-slate-700 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={salvando}
+                  className="flex-1 py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-extrabold text-xs cursor-pointer disabled:opacity-50"
+                >
+                  {salvando ? 'Salvando...' : 'Salvar Alterações'}
                 </button>
               </div>
             </form>
