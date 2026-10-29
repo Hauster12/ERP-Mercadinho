@@ -91,6 +91,7 @@ export interface Caixa {
   status: CashStatus;
   operacoes?: OperacaoCaixa[];
   saldoAtual?: number;
+  saldoDinheiro?: number;
   totalEntradas?: number;
   totalSaidas?: number;
   totalVendas?: number;

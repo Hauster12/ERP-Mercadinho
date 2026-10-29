@@ -582,7 +582,7 @@ export const ComprasView: React.FC = () => {
               </div>
 
               {/* Items List Table */}
-              <div className="border border-slate-200 rounded-xl overflow-hidden">
+              <div className="border border-slate-200 rounded-xl overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-50 text-slate-600 font-mono border-b border-slate-200">
                     <tr>
@@ -726,7 +726,7 @@ export const ComprasView: React.FC = () => {
                 <h4 className="text-xs font-mono font-bold uppercase text-slate-700 mb-2">
                   Itens Adquiridos
                 </h4>
-                <div className="border border-slate-200 rounded-xl overflow-hidden">
+                <div className="border border-slate-200 rounded-xl overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead className="bg-slate-50 text-slate-600 font-mono border-b border-slate-200">
                       <tr>

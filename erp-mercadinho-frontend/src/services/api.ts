@@ -15,7 +15,7 @@ import type {
   AvisoAdmin
 } from '../types';
 
-export const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api').replace(/\/$/, '');
+export const BASE_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '');
 
 let currentToken: string | null = localStorage.getItem('nexus_erp_token');
 

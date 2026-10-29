@@ -501,7 +501,7 @@ export const CadastrosView: React.FC = () => {
 
       {/* ABA CLIENTES */}
       {abaAtiva === 'clientes' && (
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+        <div className="bg-white border border-slate-200 rounded-xl overflow-x-auto shadow-xs">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 text-slate-600 font-mono border-b border-slate-200">
               <tr>
@@ -573,7 +573,7 @@ export const CadastrosView: React.FC = () => {
 
       {/* ABA FORNECEDORES */}
       {abaAtiva === 'fornecedores' && (
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+        <div className="bg-white border border-slate-200 rounded-xl overflow-x-auto shadow-xs">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 text-slate-600 font-mono border-b border-slate-200">
               <tr>
@@ -632,7 +632,7 @@ export const CadastrosView: React.FC = () => {
 
       {/* ABA CATEGORIAS */}
       {abaAtiva === 'categorias' && (
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+        <div className="bg-white border border-slate-200 rounded-xl overflow-x-auto shadow-xs">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 text-slate-600 font-mono border-b border-slate-200">
               <tr>
@@ -687,7 +687,7 @@ export const CadastrosView: React.FC = () => {
 
       {/* ABA USUÁRIOS */}
       {abaAtiva === 'usuarios' && isAdmin && (
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+        <div className="bg-white border border-slate-200 rounded-xl overflow-x-auto shadow-xs">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 text-slate-600 font-mono border-b border-slate-200">
               <tr>

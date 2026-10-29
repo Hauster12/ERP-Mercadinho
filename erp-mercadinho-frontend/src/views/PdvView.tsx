@@ -360,7 +360,7 @@ export const PdvView: React.FC = () => {
   }
 
   return (
-    <div className="p-3 lg:p-5 flex flex-col xl:flex-row gap-5 min-h-[calc(100vh-4rem)]">
+    <div className="p-3 pb-28 sm:p-3 sm:pb-5 lg:p-5 flex flex-col xl:flex-row gap-5 min-h-[calc(100vh-4rem)]">
       {/* LEFT COLUMN: Catalog & Rapid Barcode Search */}
       <div className="flex-1 flex flex-col gap-4 min-w-0">
         {/* Rapid Search Bar */}
@@ -373,7 +373,7 @@ export const PdvView: React.FC = () => {
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
               onKeyDown={handleSearchKeyDown}
-              placeholder="Digite o código de barras, SKU ou nome do item (Pressione Enter para adicionar)..."
+              placeholder="Código de barras, SKU ou nome do produto..."
               className="w-full bg-slate-50 border border-slate-300 focus:border-cyan-600 focus:bg-white text-slate-900 pl-11 pr-24 py-3 rounded-lg text-sm outline-none transition-colors placeholder:text-slate-400 font-sans"
               autoFocus
             />
@@ -413,7 +413,7 @@ export const PdvView: React.FC = () => {
         </div>
 
         {/* Product Catalog Grid */}
-        <div className="flex-1 bg-white border border-slate-200 rounded-xl p-3.5 overflow-y-auto max-h-[calc(100vh-16rem)] shadow-xs">
+        <div className="flex-1 bg-white border border-slate-200 rounded-xl p-3.5 overflow-y-auto max-h-[50dvh] sm:max-h-[calc(100vh-16rem)] xl:max-h-none shadow-xs">
           {loading ? (
             <div className="h-64 flex items-center justify-center text-slate-400 text-sm">
               Carregando catálogo de produtos...
@@ -691,12 +691,31 @@ export const PdvView: React.FC = () => {
           <button
             onClick={handleFinalizarVenda}
             disabled={finalizando || carrinho.length === 0}
-            className="w-full py-3.5 px-4 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-black text-sm tracking-wide transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            className="hidden sm:flex w-full py-3.5 px-4 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-black text-sm tracking-wide transition-all shadow-md items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
           >
             <CheckCircle className="w-5 h-5" />
             <span>{finalizando ? 'Processando Venda...' : `FINALIZAR VENDA (R$ ${total.toFixed(2)})`}</span>
           </button>
         </div>
+      </div>
+
+      <div className="pdv-mobile-checkout">
+        <div className="min-w-0 flex-1">
+          <span className="block text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500">
+            Total
+          </span>
+          <span className="block truncate text-lg font-black font-mono text-amber-700">
+            R$ {total.toFixed(2)}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={handleFinalizarVenda}
+          disabled={finalizando || carrinho.length === 0}
+          className="min-h-12 flex-[1.5] rounded-lg bg-cyan-600 px-3 py-3 text-xs font-black text-white shadow-md transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {finalizando ? 'Processando...' : 'FINALIZAR VENDA'}
+        </button>
       </div>
 
       {/* Sale Success Receipt Modal */}

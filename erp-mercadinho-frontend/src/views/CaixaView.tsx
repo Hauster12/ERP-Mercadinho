@@ -161,6 +161,24 @@ export const CaixaView: React.FC = () => {
     }
   };
 
+  const abrirModalFechamento = async () => {
+    if (!caixaAtual) return;
+
+    try {
+      const detalhes = await api.getCaixa(caixaAtual.id);
+      setCaixaDetalhes(detalhes);
+      setValorFinalContado(
+        String(detalhes.saldoDinheiro ?? caixaAtual.valorInicial)
+      );
+      setModalFechamentoAberto(true);
+    } catch (err: any) {
+      error('Erro ao consultar saldo do caixa', err.message);
+    }
+  };
+
+  const saldoEsperado =
+    caixaDetalhes?.saldoDinheiro ?? caixaAtual?.valorInicial ?? 0;
+
   return (
     <div className="p-4 lg:p-6 space-y-6">
       {/* Current Cash Register Status Card */}
@@ -216,10 +234,7 @@ export const CaixaView: React.FC = () => {
               </button>
 
               <button
-                onClick={() => {
-                  setValorFinalContado(String(caixaDetalhes?.saldoAtual || caixaAtual.valorInicial));
-                  setModalFechamentoAberto(true);
-                }}
+                onClick={abrirModalFechamento}
                 className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 font-bold text-xs transition-colors cursor-pointer"
               >
                 <Lock className="w-4 h-4" />
@@ -263,7 +278,7 @@ export const CaixaView: React.FC = () => {
           <div className="p-3 rounded-xl bg-cyan-50/60 border border-cyan-200">
             <span className="text-[10px] font-mono font-bold text-cyan-900 uppercase">Saldo em Gaveta</span>
             <p className="text-lg font-black font-mono text-cyan-800 mt-0.5">
-              R$ {Number(caixaDetalhes?.saldoAtual || caixaAtual?.valorInicial || 0).toFixed(2)}
+              R$ {Number(saldoEsperado).toFixed(2)}
             </p>
           </div>
         </div>
@@ -432,7 +447,7 @@ export const CaixaView: React.FC = () => {
                 <div className="flex justify-between">
                   <span>Saldo Teórico em Gaveta:</span>
                   <span className="text-cyan-800 font-bold">
-                    R$ {Number(caixaDetalhes?.saldoAtual || caixaAtual?.valorInicial || 0).toFixed(2)}
+                    R$ {Number(saldoEsperado).toFixed(2)}
                   </span>
                 </div>
               </div>

@@ -32,6 +32,7 @@ const MainLayout: React.FC = () => {
   const { success, error } = useToast();
   const [activeTab, setActiveTab] = useState<ActiveTab>('pdv');
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // Cash Opening Modal state (triggered from Navigation or PDV)
   const [modalAbrirCaixaAberto, setModalAbrirCaixaAberto] = useState(false);
@@ -240,11 +241,13 @@ const MainLayout: React.FC = () => {
         setActiveTab={setActiveTab}
         mobileOpen={mobileOpen}
         setMobileOpen={setMobileOpen}
+        collapsed={sidebarCollapsed}
+        onToggleCollapsed={() => setSidebarCollapsed((collapsed) => !collapsed)}
         onAbrirCaixaModal={() => setModalAbrirCaixaAberto(true)}
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 lg:pl-64">
+      <div className={`flex-1 flex flex-col min-w-0 ${sidebarCollapsed ? 'md:pl-16' : 'md:pl-64'}`}>
         <Header
           activeTab={activeTab}
           setMobileOpen={setMobileOpen}

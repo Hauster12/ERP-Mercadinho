@@ -46,7 +46,7 @@ export const LoginView: React.FC = () => {
             <img
               src="/logo-full.png"
               alt="NexusERP"
-              className="h-16 w-auto object-contain"
+              className="h-auto w-full max-w-80 max-h-16 object-contain"
             />
           </div>
           <h2 className="text-xl font-extrabold text-slate-900 font-['Syne'] tracking-tight">

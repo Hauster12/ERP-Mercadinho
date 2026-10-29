@@ -69,18 +69,19 @@ export const Header: React.FC<HeaderProps> = ({
   const currentInfo = tabTitles[activeTab];
 
   return (
-    <header className="h-16 px-4 lg:px-6 bg-white border-b border-slate-200 flex items-center justify-between sticky top-0 z-30">
+    <header className="h-16 px-3 sm:px-4 lg:px-6 bg-white border-b border-slate-200 flex items-center justify-between gap-2 sticky top-0 z-30">
       {/* Left: Mobile trigger & Page info */}
-      <div className="flex items-center gap-3">
+      <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
         <button
+          type="button"
           onClick={() => setMobileOpen(true)}
-          className="lg:hidden p-2 text-slate-500 hover:text-slate-900 rounded-lg hover:bg-slate-100"
+          aria-label="Abrir menu"
+          className="md:hidden p-2 text-slate-500 hover:text-slate-900 rounded-lg hover:bg-slate-100"
         >
           <Menu className="w-5 h-5" />
         </button>
-
-        <div>
-          <h1 className="text-base lg:text-lg font-bold text-slate-900 font-['Syne'] tracking-tight flex items-center gap-2">
+        <div className="min-w-0">
+          <h1 className="truncate text-base lg:text-lg font-bold text-slate-900 font-['Syne'] tracking-tight flex items-center gap-2">
             {currentInfo.title}
           </h1>
           <p className="text-[11px] text-slate-500 hidden sm:block">
@@ -90,7 +91,7 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* Right: Quick actions, cash status & live indicators */}
-      <div className="flex items-center gap-3">
+      <div className="flex shrink-0 items-center gap-2 sm:gap-3">
         {/* Admin Recados / Avisos Button */}
         {user?.perfil === 'ADMIN' && onOpenAvisosAdmin && (
           <button

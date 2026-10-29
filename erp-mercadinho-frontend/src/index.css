@@ -30,7 +30,70 @@ body {
   background-color: #F8FAFC;
   color: #0F172A;
   min-height: 100vh;
-  overflow-x: hidden;
+  min-height: 100dvh;
+  overflow-x: clip;
+}
+
+#root {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+main {
+  min-width: 0;
+}
+
+.toast-viewport {
+  top: max(1rem, env(safe-area-inset-top));
+  right: max(1rem, env(safe-area-inset-right));
+  max-width: 24rem;
+}
+
+.pdv-mobile-checkout {
+  display: none;
+}
+
+@media (max-width: 639px) {
+  .toast-viewport {
+    top: calc(env(safe-area-inset-top) + 4.5rem);
+    right: max(0.75rem, env(safe-area-inset-right));
+    left: max(0.75rem, env(safe-area-inset-left));
+    max-width: none;
+  }
+
+  .pdv-mobile-checkout {
+    position: fixed;
+    z-index: 40;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border-top: 1px solid #e2e8f0;
+    background: rgb(255 255 255 / 0.98);
+    padding: 0.75rem max(0.75rem, env(safe-area-inset-right))
+      max(0.75rem, env(safe-area-inset-bottom))
+      max(0.75rem, env(safe-area-inset-left));
+    box-shadow: 0 -8px 24px rgb(15 23 42 / 0.12);
+  }
+
+  .fixed.inset-0.z-50 {
+    align-items: flex-start;
+    overflow-y: auto;
+    padding-top: max(1rem, env(safe-area-inset-top));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  .fixed.inset-0.z-50 > :first-child {
+    flex-shrink: 0;
+    margin-top: auto;
+    margin-bottom: auto;
+  }
+
+  .overflow-x-auto > table {
+    min-width: 40rem;
+  }
 }
 
 /* Technical clean scrollbar */
