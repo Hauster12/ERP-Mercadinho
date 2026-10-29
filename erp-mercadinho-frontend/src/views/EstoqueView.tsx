@@ -35,7 +35,7 @@ export const EstoqueView: React.FC = () => {
   }, [produtoFiltro]);
 
   return (
-    <div className="p-4 lg:p-6 space-y-5">
+    <div className="p-3 sm:p-4 lg:p-6 space-y-5">
       {/* Header */}
       <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">

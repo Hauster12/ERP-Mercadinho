@@ -25,12 +25,162 @@
   font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-width: 320px;
+  min-height: 100%;
+}
+
 body {
   margin: 0;
   background-color: #F8FAFC;
   color: #0F172A;
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+#root {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.app-main,
+.app-main > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.app-main input,
+.app-main select,
+.app-main textarea {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.app-main table {
+  min-width: 42rem;
+}
+
+.app-main button {
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (pointer: coarse) {
+  .app-main button {
+    min-height: 2.75rem;
+  }
+
+  .app-main input,
+  .app-main select,
+  .app-main textarea {
+    min-height: 2.75rem;
+  }
+}
+
+@media (max-width: 640px), (max-height: 700px) {
+  .fixed.inset-0.z-50 {
+    align-items: flex-end;
+    overflow-y: auto;
+    padding: 0;
+  }
+
+  .fixed.inset-0.z-50 > div {
+    width: 100%;
+    max-width: none;
+    max-height: 92vh;
+    max-height: 92dvh;
+    overflow-y: auto;
+    margin: 0;
+    padding: 1.25rem 1rem calc(1rem + env(safe-area-inset-bottom));
+    border-radius: 1.25rem 1.25rem 0 0;
+    animation: mobile-sheet-enter 220ms ease-out both;
+  }
+
+  .fixed.inset-0.z-50 > div form > div:last-child {
+    position: sticky;
+    bottom: -1.25rem;
+    z-index: 1;
+    margin-inline: -1rem;
+    padding: 0.75rem 1rem calc(0.5rem + env(safe-area-inset-bottom));
+    background: white;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  .fixed.inset-0.z-50 button {
+    min-height: 2.75rem;
+  }
+}
+
+@keyframes mobile-sheet-enter {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fixed.inset-0.z-50 > div {
+    animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-main div.overflow-x-auto:has(> table) {
+    position: relative;
+  }
+
+  .app-main div.overflow-x-auto:has(> table)::after {
+    position: sticky;
+    left: 0;
+    display: block;
+    width: fit-content;
+    margin: 0.5rem 0.75rem 0.75rem;
+    padding: 0.35rem 0.6rem;
+    border: 1px solid #bae6fd;
+    border-radius: 9999px;
+    background: #f0f9ff;
+    color: #075985;
+    content: 'Deslize para ver mais  →';
+    font-size: 0.6875rem;
+    font-weight: 700;
+  }
+
+  .app-main button,
+  .app-main a,
+  .app-main input,
+  .app-main select,
+  .app-main textarea {
+    scroll-margin-block: 1rem;
+  }
+}
+
+.app-main :is(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid #0891b2;
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  form input,
+  form select,
+  form textarea {
+    font-size: 16px;
+  }
+
+  .app-main :is(input, select, textarea) {
+    font-size: 16px;
+  }
 }
 
 /* Technical clean scrollbar */
