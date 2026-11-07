@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+@theme {
+  --color-nexus-cyan: #0891B2;
+  --color-nexus-cyan-hover: #0E7490;
+  --color-nexus-cyan-muted: #E0F2FE;
+  --color-nexus-yellow: #D97706;
+  --color-nexus-yellow-hover: #B45309;
+  --color-nexus-yellow-muted: #FEF3C7;
+
+  --color-bg-base: #F8FAFC;
+  --color-bg-surface: #FFFFFF;
+  --color-bg-elevated: #F1F5F9;
+  --color-bg-hover: #E2E8F0;
+  --color-border-subtle: #E2E8F0;
+  --color-border-accent: rgba(8, 145, 178, 0.4);
+
+  --font-brand: 'Syne', sans-serif;
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+:root {
+  color-scheme: light;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+body {
+  margin: 0;
+  background-color: #F8FAFC;
+  color: #0F172A;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: clip;
+}
+
+#root {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+main {
+  min-width: 0;
+}
+
+.toast-viewport {
+  top: max(1rem, env(safe-area-inset-top));
+  right: max(1rem, env(safe-area-inset-right));
+  max-width: 24rem;
+}
+
+.pdv-mobile-checkout {
+  display: none;
+}
+
+@media (max-width: 639px) {
+  .toast-viewport {
+    top: calc(env(safe-area-inset-top) + 4.5rem);
+    right: max(0.75rem, env(safe-area-inset-right));
+    left: max(0.75rem, env(safe-area-inset-left));
+    max-width: none;
+  }
+
+  .pdv-mobile-checkout {
+    position: fixed;
+    z-index: 40;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border-top: 1px solid #e2e8f0;
+    background: rgb(255 255 255 / 0.98);
+    padding: 0.75rem max(0.75rem, env(safe-area-inset-right))
+      max(0.75rem, env(safe-area-inset-bottom))
+      max(0.75rem, env(safe-area-inset-left));
+    box-shadow: 0 -8px 24px rgb(15 23 42 / 0.12);
+  }
+
+  .fixed.inset-0.z-50 {
+    align-items: flex-start;
+    overflow-y: auto;
+    padding-top: max(1rem, env(safe-area-inset-top));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  .fixed.inset-0.z-50 > :first-child {
+    flex-shrink: 0;
+    margin-top: auto;
+    margin-bottom: auto;
+  }
+
+  .overflow-x-auto > table {
+    min-width: 40rem;
+  }
+}
+
+/* Technical clean scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* Tabular figures for prices, SKU and codes */
+.tabular-numbers {
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+}
