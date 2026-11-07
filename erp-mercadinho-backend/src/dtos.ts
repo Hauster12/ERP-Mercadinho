@@ -321,6 +321,14 @@ export class ItemVendaDto {
   @Min(0.001, { message: "A quantidade mínima do item é 0,001" })
   @Max(999999999, { message: "A quantidade do item excede o limite permitido" })
   quantidade!: number;
+
+}
+
+export class ItemVendaPdvDto extends ItemVendaDto {
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 }, { message: "O preço registrado no PDV deve ter até 2 casas decimais" })
+  @Min(0.01, { message: "O preço registrado no PDV deve ser maior que zero" })
+  precoUnitarioEsperado?: number;
 }
 
 export class PagamentoDto {
@@ -356,8 +364,8 @@ export class VendaDto {
   @ArrayMinSize(1, { message: "Adicione pelo menos 1 produto para realizar a venda" })
   @ArrayMaxSize(100, { message: "A venda pode ter no máximo 100 itens distintos" })
   @ValidateNested({ each: true })
-  @Type(() => ItemVendaDto)
-  itens!: ItemVendaDto[];
+  @Type(() => ItemVendaPdvDto)
+  itens!: ItemVendaPdvDto[];
 
   @IsArray({ message: "A lista de pagamentos é inválida" })
   @ArrayMinSize(1, { message: "Informe pelo menos 1 forma de pagamento" })

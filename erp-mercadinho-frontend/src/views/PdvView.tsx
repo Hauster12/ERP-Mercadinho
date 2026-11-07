@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Search,
   Barcode,
@@ -15,14 +15,34 @@ import {
   Printer,
   AlertTriangle
 } from 'lucide-react';
-import { api } from '../services/api';
+import { api, ApiError } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import type { Produto, Categoria, Cliente, PaymentMethod, RecadoOperador, Caixa } from '../types';
+import type { Produto, Categoria, Cliente, PaymentMethod, RecadoOperador, Caixa, Venda } from '../types';
+import {
+  getOfflinePdvData,
+  getOfflineSales,
+  saveOfflinePdvData,
+  saveOfflineSale,
+  updateOfflineSale,
+  type VendaOffline,
+} from '../services/offlineStorage';
+import { sincronizarVendasOffline } from '../services/offlineSync';
 
 interface CartItem {
   produto: Produto;
   quantidade: number;
+}
+
+interface VendaConcluida extends Partial<Venda> {
+  id: string;
+  valorTotal: number;
+  forma: PaymentMethod;
+  itensDetalhados: CartItem[];
+  troco: number;
+  valorRecebido: number;
+  offline?: boolean;
+  sincronizada?: boolean;
 }
 
 export const PdvView: React.FC = () => {
@@ -34,6 +54,9 @@ export const PdvView: React.FC = () => {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(false);
+  const [online, setOnline] = useState(navigator.onLine);
+  const [vendasOffline, setVendasOffline] = useState<VendaOffline[]>([]);
+  const [sincronizandoOffline, setSincronizandoOffline] = useState(false);
 
   // Filters & Search
   const [busca, setBusca] = useState('');
@@ -50,7 +73,7 @@ export const PdvView: React.FC = () => {
   const [finalizando, setFinalizando] = useState(false);
 
   // Sale Success Modal
-  const [vendaConcluida, setVendaConcluida] = useState<any | null>(null);
+  const [vendaConcluida, setVendaConcluida] = useState<VendaConcluida | null>(null);
 
   // Open Cash Register State
   const [caixasAbertosLoja, setCaixasAbertosLoja] = useState<Caixa[]>([]);
@@ -76,7 +99,7 @@ export const PdvView: React.FC = () => {
         })
         .catch(() => setCaixasAbertosLoja([]));
     }
-  }, [caixaAtual?.status]);
+  }, [caixaAtual, numeroCaixaEscolhido]);
 
   // Monitor shift notes for the chosen register when cash is closed
   useEffect(() => {
@@ -97,32 +120,126 @@ export const PdvView: React.FC = () => {
         cancel = true;
       };
     }
-  }, [caixaAtual?.status, numeroCaixaEscolhido]);
+  }, [caixaAtual, numeroCaixaEscolhido]);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Load initial data
-  const carregarDados = async () => {
+  const carregarDados = useCallback(async () => {
     try {
       setLoading(true);
+      const carregarProdutos = async () => {
+        const todos: Produto[] = [];
+        for (let pagina = 1; ; pagina += 1) {
+          const lote = await api.getProdutos({ pagina, limite: 100 });
+          todos.push(...lote);
+          if (lote.length < 100) return todos;
+        }
+      };
       const [prodRes, catRes, cliRes] = await Promise.all([
-        api.getProdutos({ limite: 100 }),
+        carregarProdutos(),
         api.getCategorias(),
         api.getClientes(),
       ]);
+      setOnline(true);
       setProdutos(prodRes);
       setCategorias(catRes);
       setClientes(cliRes);
+      if (user) {
+        try {
+          await saveOfflinePdvData(user.id, {
+            produtos: prodRes,
+            categorias: catRes,
+            clientes: cliRes,
+            atualizadoEm: new Date().toISOString(),
+          });
+        } catch (cacheError) {
+          console.error('[PDV] Não foi possível atualizar o catálogo offline:', cacheError);
+          warning('Catálogo offline indisponível', 'Os dados foram carregados, mas não puderam ser salvos neste dispositivo.');
+        }
+      }
     } catch (err: any) {
+      if (err instanceof ApiError && err.status === undefined && user) {
+        setOnline(false);
+        try {
+          const cache = await getOfflinePdvData(user.id);
+          if (cache) {
+            setProdutos(cache.produtos);
+            setCategorias(cache.categorias);
+            setClientes(cache.clientes);
+            return;
+          }
+        } catch (cacheError) {
+          console.error('[PDV] Falha ao ler catálogo offline:', cacheError);
+          error('Erro ao carregar catálogo offline', 'Não foi possível acessar o banco local deste dispositivo.');
+          return;
+        }
+      }
       error('Erro ao carregar catálogo', err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, error, warning]);
 
   useEffect(() => {
-    carregarDados();
-  }, []);
+    void carregarDados();
+  }, [carregarDados]);
+
+  useEffect(() => {
+    if (!user) return;
+    let active = true;
+
+    const atualizarFila = async () => {
+      try {
+        const sales = await getOfflineSales(user.id);
+        if (active) setVendasOffline(sales);
+      } catch (queueError) {
+        console.error('[PDV] Falha ao consultar vendas offline:', queueError);
+        if (active) error('Erro ao consultar vendas offline', 'Não foi possível acessar o banco local deste dispositivo.');
+      }
+    };
+
+    const sincronizar = async () => {
+      setSincronizandoOffline(true);
+      try {
+        await sincronizarVendasOffline(user.id);
+      } catch (syncError) {
+        console.error('[PDV] Falha na sincronização automática:', syncError);
+        warning('Sincronização pendente', 'Não foi possível sincronizar agora. As vendas continuam salvas neste dispositivo.');
+      } finally {
+        if (active) {
+          setSincronizandoOffline(false);
+          await atualizarFila();
+        }
+      }
+    };
+
+    const aoFicarOnline = () => {
+      setOnline(true);
+      void sincronizar();
+    };
+    const aoFicarOffline = () => setOnline(false);
+    const aoAtualizarVendas = () => void atualizarFila();
+    const aoSincronizarVenda = () => {
+      setVendaConcluida((current) =>
+        current?.offline ? { ...current, offline: false, sincronizada: true } : current,
+      );
+    };
+
+    void atualizarFila();
+    if (navigator.onLine) void sincronizar();
+    window.addEventListener('online', aoFicarOnline);
+    window.addEventListener('offline', aoFicarOffline);
+    window.addEventListener('offline-sales:updated', aoAtualizarVendas);
+    window.addEventListener('offline-sales:synced', aoSincronizarVenda);
+    return () => {
+      active = false;
+      window.removeEventListener('online', aoFicarOnline);
+      window.removeEventListener('offline', aoFicarOffline);
+      window.removeEventListener('offline-sales:updated', aoAtualizarVendas);
+      window.removeEventListener('offline-sales:synced', aoSincronizarVenda);
+    };
+  }, [user, error, warning]);
 
   // Search filter
   const produtosFiltrados = produtos.filter((p) => {
@@ -209,6 +326,16 @@ export const PdvView: React.FC = () => {
 
   const valorRecebidoNum = parseFloat(valorRecebidoDinheiro) || total;
   const troco = Math.max(0, valorRecebidoNum - total);
+  const vendasOfflineCaixa = caixaAtual
+    ? vendasOffline.filter((sale) => sale.payload.caixaId === caixaAtual.id)
+    : [];
+  const totalVendasOffline = vendasOfflineCaixa.reduce((sum, sale) => sum + sale.total, 0);
+  const dinheiroOffline = vendasOfflineCaixa.reduce(
+    (sum, sale) => sum + sale.payload.pagamentos
+      .filter((pagamento) => pagamento.forma === 'DINHEIRO')
+      .reduce((total, pagamento) => total + pagamento.valor, 0),
+    0,
+  );
 
   // Finalize Sale
   const handleFinalizarVenda = async () => {
@@ -222,10 +349,9 @@ export const PdvView: React.FC = () => {
       return;
     }
 
+    const chaveIdempotencia = `offline-${crypto.randomUUID()}`;
     try {
       setFinalizando(true);
-
-      const chaveIdempotencia = `vd-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
       const payload = {
         caixaId: caixaAtual.id,
@@ -235,6 +361,7 @@ export const PdvView: React.FC = () => {
         itens: carrinho.map((item) => ({
           produtoId: item.produto.id,
           quantidade: item.quantidade,
+          precoUnitarioEsperado: Number(item.produto.precoVenda),
         })),
         pagamentos: [
           {
@@ -245,6 +372,7 @@ export const PdvView: React.FC = () => {
       };
 
       const venda = await api.finalizarVenda(payload);
+      setOnline(true);
       success('Venda concluída com sucesso!', `Total: R$ ${total.toFixed(2)}`);
 
       setVendaConcluida({
@@ -259,9 +387,92 @@ export const PdvView: React.FC = () => {
       carregarDados();
       refreshCaixa();
     } catch (err: any) {
-      error('Falha ao concluir venda', err.message);
+      if (
+        err instanceof ApiError &&
+        (err.status === undefined || err.status >= 500) &&
+        user &&
+        caixaAtual
+      ) {
+        if (err.status === undefined) setOnline(false);
+        try {
+          const localId = crypto.randomUUID();
+          const sale: VendaOffline = {
+            localId,
+            usuarioId: user.id,
+            payload: {
+              caixaId: caixaAtual.id,
+              clienteId: clienteId || undefined,
+              chaveIdempotencia,
+              desconto: Number(desconto) || 0,
+              itens: carrinho.map((item) => ({
+                produtoId: item.produto.id,
+                quantidade: item.quantidade,
+                precoUnitarioEsperado: Number(item.produto.precoVenda),
+              })),
+              pagamentos: [{ forma: metodoPagamento, valor: total }],
+            },
+            itens: carrinho.map((item) => ({ ...item })),
+            total,
+            forma: metodoPagamento,
+            criadoEm: new Date().toISOString(),
+            status: 'pending',
+          };
+          await saveOfflineSale(sale);
+          setProdutos((current) =>
+            current.map((produto) => {
+              const vendida = sale.itens.find((item) => item.produto.id === produto.id);
+              return vendida
+                ? { ...produto, estoqueAtual: Math.max(0, Number(produto.estoqueAtual) - vendida.quantidade) }
+                : produto;
+            }),
+          );
+          setVendaConcluida({
+            id: localId,
+            numeroCaixa: caixaAtual.numeroCaixa,
+            criadoEm: sale.criadoEm,
+            valorTotal: sale.total,
+            itensDetalhados: sale.itens,
+            troco: metodoPagamento === 'DINHEIRO' ? troco : 0,
+            valorRecebido: metodoPagamento === 'DINHEIRO' ? valorRecebidoNum : total,
+            forma: metodoPagamento,
+            offline: true,
+          });
+          limparCarrinho();
+          success('Venda salva neste dispositivo', 'Ela será sincronizada automaticamente quando a conexão voltar.');
+        } catch (storageError) {
+          console.error('[PDV] Não foi possível salvar a venda offline:', storageError);
+          error('Não foi possível registrar a venda', 'A venda não foi salva no banco local. Não entregue o comprovante; verifique o armazenamento deste dispositivo.');
+        }
+      } else {
+        error('Falha ao concluir venda', err.message);
+      }
     } finally {
       setFinalizando(false);
+    }
+  };
+
+  const tentarSincronizarVenda = async (sale: VendaOffline) => {
+    try {
+      await updateOfflineSale({ ...sale, status: 'pending', erro: undefined });
+      await sincronizarVendasOffline(user?.id || '');
+      setVendasOffline(await getOfflineSales(user?.id));
+    } catch (syncError) {
+      console.error('[PDV] Falha ao tentar sincronizar venda:', syncError);
+      error('Falha ao sincronizar venda', 'A venda continua preservada neste dispositivo.');
+    }
+  };
+
+  const sincronizarAgora = async () => {
+    if (!user) return;
+    setSincronizandoOffline(true);
+    try {
+      await sincronizarVendasOffline(user.id);
+      setVendasOffline(await getOfflineSales(user.id));
+    } catch (syncError) {
+      console.error('[PDV] Falha na sincronização manual:', syncError);
+      warning('Sincronização pendente', 'As vendas continuam salvas neste dispositivo.');
+    } finally {
+      setSincronizandoOffline(false);
     }
   };
 
@@ -296,6 +507,11 @@ export const PdvView: React.FC = () => {
           <p className="text-sm text-slate-500 mt-2 max-w-md mx-auto">
             Selecione qual ponto de atendimento deseja operar e informe o fundo de troco para iniciar as vendas.
           </p>
+          {!online && (
+            <p className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs font-semibold text-amber-900">
+              Sem conexão. É necessário abrir o caixa online antes de iniciar vendas neste terminal.
+            </p>
+          )}
 
           <form onSubmit={handleAbrirCaixa} className="mt-6 space-y-4">
             {/* Escolha entre Caixa 01 e Caixa 02 */}
@@ -383,11 +599,11 @@ export const PdvView: React.FC = () => {
 
             <button
               type="submit"
-              disabled={abrindoCaixa}
+              disabled={abrindoCaixa || !online}
               className="w-full py-3.5 px-4 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-extrabold text-sm tracking-wide transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               <Sparkles className="w-4 h-4" />
-              <span>{abrindoCaixa ? 'Abrindo Caixa...' : `Abrir Caixa 0${numeroCaixaEscolhido} e Iniciar Vendas`}</span>
+              <span>{abrindoCaixa ? 'Abrindo Caixa...' : !online ? 'Aguardando conexão' : `Abrir Caixa 0${numeroCaixaEscolhido} e Iniciar Vendas`}</span>
             </button>
           </form>
         </div>
@@ -413,18 +629,64 @@ export const PdvView: React.FC = () => {
             <div>
               <span className="text-slate-500">Fluxo de Vendas no Caixa: </span>
               <strong className="text-cyan-800">
-                {caixaAtual.quantidadeVendas || 0} venda(s) • R${' '}
-                {Number(caixaAtual.totalVendas || 0).toFixed(2)}
+                {(caixaAtual.quantidadeVendas || 0) + vendasOfflineCaixa.length} venda(s) • R${' '}
+                {(Number(caixaAtual.totalVendas || 0) + totalVendasOffline).toFixed(2)}
               </strong>
             </div>
             <div className="hidden sm:block pl-3 border-l border-slate-200">
               <span className="text-slate-500">Gaveta: </span>
               <strong className="text-emerald-800">
-                R$ {Number(caixaAtual.saldoDinheiro ?? caixaAtual.valorInicial ?? 0).toFixed(2)}
+                R$ {(Number(caixaAtual.saldoDinheiro ?? caixaAtual.valorInicial ?? 0) + dinheiroOffline).toFixed(2)}
               </strong>
             </div>
           </div>
         </div>
+
+        {(!online || vendasOffline.length > 0) && (
+          <div className={`rounded-xl border p-3 text-sm ${
+            !online || vendasOffline.some((sale) => sale.status === 'review')
+              ? 'bg-amber-50 border-amber-300 text-amber-950'
+              : 'bg-cyan-50 border-cyan-200 text-cyan-950'
+          }`}>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="font-bold">
+                {!online
+                  ? 'Sem conexão: o PDV está usando o catálogo salvo neste terminal.'
+                  : sincronizandoOffline
+                    ? 'Sincronizando vendas offline...'
+                    : vendasOffline.some((sale) => sale.status === 'review')
+                      ? 'Há vendas que precisam de revisão antes do fechamento do caixa.'
+                      : `${vendasOffline.length} venda(s) aguardando sincronização.`}
+              </div>
+              {online && vendasOffline.some((sale) => sale.status === 'pending') && (
+                <button
+                  type="button"
+                  disabled={sincronizandoOffline}
+                  onClick={() => void sincronizarAgora()}
+                  className="rounded-lg border border-current px-3 py-1.5 text-xs font-bold disabled:opacity-50"
+                >
+                  Sincronizar agora
+                </button>
+              )}
+            </div>
+            {vendasOffline.filter((sale) => sale.status === 'review').map((sale) => (
+              <div key={sale.localId} className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-amber-200 pt-2 text-xs">
+                <span>
+                  Venda de {new Date(sale.criadoEm).toLocaleString('pt-BR')} — {sale.erro}
+                </span>
+                {online && (
+                  <button
+                    type="button"
+                    onClick={() => void tentarSincronizarVenda(sale)}
+                    className="rounded-lg border border-amber-500 px-2.5 py-1 font-bold"
+                  >
+                    Tentar novamente
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Rapid Search Bar */}
         <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
@@ -790,10 +1052,18 @@ export const PdvView: React.FC = () => {
                 <CheckCircle className="w-6 h-6" />
               </div>
               <h3 className="text-xl font-black text-slate-900 font-['Syne']">
-                Venda Registrada com Sucesso!
+                {vendaConcluida.offline
+                  ? 'Venda salva offline'
+                  : vendaConcluida.sincronizada
+                    ? 'Venda sincronizada com sucesso'
+                  : 'Venda Registrada com Sucesso!'}
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">
-                Comprovante interno sem valor fiscal emitido
+                {vendaConcluida.offline
+                  ? 'Aguardando sincronização com o servidor; comprovante interno sem valor fiscal'
+                  : vendaConcluida.sincronizada
+                    ? 'Registrada no servidor; comprovante interno sem valor fiscal'
+                    : 'Comprovante interno sem valor fiscal emitido'}
               </p>
             </div>
 

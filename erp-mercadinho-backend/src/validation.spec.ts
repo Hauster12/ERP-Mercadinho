@@ -35,3 +35,36 @@ test("valida pagamento e item aninhados", async () => {
     ),
   ).rejects.toThrow();
 });
+
+test("aceita preço de referência opcional para sincronização do PDV", async () => {
+  const venda = await pipe.transform(
+    {
+      caixaId: "56a1beaa-61d8-4ebf-8286-5db7159fcb1d",
+      chaveIdempotencia: "offline-sale-123",
+      itens: [{
+        produtoId: "56a1beaa-61d8-4ebf-8286-5db7159fcb1d",
+        quantidade: 1,
+        precoUnitarioEsperado: 10,
+      }],
+      pagamentos: [{ forma: "PIX", valor: 10 }],
+    },
+    { type: "body", metatype: VendaDto },
+  );
+  expect(venda.itens[0].precoUnitarioEsperado).toBe(10);
+
+  await expect(
+    pipe.transform(
+      {
+        caixaId: "56a1beaa-61d8-4ebf-8286-5db7159fcb1d",
+        chaveIdempotencia: "offline-sale-124",
+        itens: [{
+          produtoId: "56a1beaa-61d8-4ebf-8286-5db7159fcb1d",
+          quantidade: 1,
+          precoUnitarioEsperado: -1,
+        }],
+        pagamentos: [{ forma: "PIX", valor: 10 }],
+      },
+      { type: "body", metatype: VendaDto },
+    ),
+  ).rejects.toThrow();
+});

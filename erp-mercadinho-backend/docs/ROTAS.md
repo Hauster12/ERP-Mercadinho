@@ -258,6 +258,8 @@ Os exemplos abaixo usam variáveis da coleção. No JSON enviado à API, substit
 
 ### POST /vendas
 
+Cada item pode receber `precoUnitarioEsperado`, opcional, para conferir o preço apresentado pelo PDV. A API rejeita a venda com conflito se o preço atual do servidor divergir; vendas offline preservam a chave de idempotência ao serem reenviadas.
+
 ```json
 {
   "caixaId": "{{caixaId}}",

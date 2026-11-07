@@ -14,10 +14,21 @@ import type {
   RecadoOperador,
   AvisoAdmin
 } from '../types';
+import { hasOfflineSalesForCash } from './offlineStorage';
 
 export const BASE_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '');
 
 let currentToken: string | null = localStorage.getItem('nexus_erp_token');
+
+export class ApiError extends Error {
+  readonly status?: number;
+
+  constructor(message: string, status?: number) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+  }
+}
 
 export function traduzirErroApi(msg: unknown, status?: number): string {
   if (typeof msg !== 'string' || !msg.trim()) {
@@ -109,7 +120,7 @@ export const api = {
       });
     } catch (netErr: any) {
       console.error(`[API Network Error] ${method} ${path}:`, netErr);
-      throw new Error(
+      throw new ApiError(
         `Sem conexão com o servidor (${BASE_URL}). Verifique se o backend está em execução.`
       );
     }
@@ -129,7 +140,7 @@ export const api = {
       const message = Array.isArray(data?.message)
         ? data.message.map((m: unknown) => traduzirErroApi(m, response.status)).join('; ')
         : traduzirErroApi(data?.message, response.status);
-      throw new Error(message);
+      throw new ApiError(message, response.status);
     }
 
     return data as T;
@@ -258,6 +269,9 @@ export const api = {
     recadoAdmin?: string;
     numeroCaixa?: number;
   }) {
+    if (await hasOfflineSalesForCash(caixaId)) {
+      throw new Error('Existem vendas offline pendentes ou em revisão neste caixa. Sincronize ou resolva essas vendas antes de fechar o caixa.');
+    }
     return this.request<any>(`/caixas/${caixaId}/fechar`, 'POST', payload);
   },
 
@@ -301,7 +315,7 @@ export const api = {
     clienteId?: string;
     chaveIdempotencia: string;
     desconto?: number;
-    itens: Array<{ produtoId: string; quantidade: number }>;
+    itens: Array<{ produtoId: string; quantidade: number; precoUnitarioEsperado?: number }>;
     pagamentos: Array<{ forma: 'DINHEIRO' | 'PIX' | 'CARTAO_CREDITO' | 'CARTAO_DEBITO'; valor: number }>;
   }) {
     return this.request<Venda>('/vendas', 'POST', payload);

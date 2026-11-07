@@ -280,20 +280,20 @@ export const CaixaView: React.FC = () => {
     caixaExibido?.saldoDinheiro ?? caixaExibido?.valorInicial ?? 0;
 
   return (
-    <div className="p-4 lg:p-6 space-y-6">
+    <div className="min-w-0 space-y-4 p-3 sm:space-y-6 sm:p-4 lg:p-6">
       {/* 1. PAINEL DE CONTROLE DOS CAIXAS (QUAL CAIXA ESTÁ ABERTO & FUNCIONÁRIO LOGADO) */}
-      <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-4">
+      <div className="min-w-0 bg-white border border-slate-200 rounded-xl p-3 sm:p-5 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-start gap-3">
             <div className="p-3 rounded-xl bg-cyan-50 text-cyan-700 border border-cyan-100">
               <Vault className="w-6 h-6" />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-lg font-black text-slate-900 font-['Syne']">
+                <h2 className="text-base sm:text-lg font-black text-slate-900 font-['Syne']">
                   Controle de Caixas & Terminais PDV
                 </h2>
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                <span className="shrink-0 px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
                   {caixasAbertos.length} {caixasAbertos.length === 1 ? 'caixa aberto' : 'caixas abertos'} agora
                 </span>
               </div>
@@ -303,7 +303,7 @@ export const CaixaView: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex w-full sm:w-auto items-center gap-2">
             {(!caixaAtual || caixaAtual.status !== 'ABERTO') && (
               <button
                 onClick={() => {
@@ -314,7 +314,7 @@ export const CaixaView: React.FC = () => {
                   setAbrirNumeroCaixa(livre || 1);
                   setModalAberturaAberto(true);
                 }}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-extrabold text-xs shadow-xs transition-all cursor-pointer"
+                className="flex min-w-0 flex-1 sm:flex-none items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-extrabold text-xs shadow-xs transition-all cursor-pointer"
               >
                 <Vault className="w-4 h-4" />
                 <span>Abrir Meu Turno de Caixa</span>
@@ -338,7 +338,7 @@ export const CaixaView: React.FC = () => {
               : 'bg-amber-50/70 border-amber-200'
           }`}
         >
-          <div className="flex items-center gap-2.5">
+          <div className="flex min-w-0 items-start sm:items-center gap-2.5">
             <div
               className={`w-3 h-3 rounded-full shrink-0 ${
                 caixaAtual?.status === 'ABERTO'
@@ -346,9 +346,9 @@ export const CaixaView: React.FC = () => {
                   : 'bg-amber-500'
               }`}
             />
-            <div className="text-xs">
+            <div className="min-w-0 text-xs leading-relaxed">
               <span className="text-slate-600">Funcionário conectado: </span>
-              <strong className="text-slate-900">{user?.nome}</strong>
+              <strong className="break-words text-slate-900">{user?.nome}</strong>
               <span className="mx-1.5 text-slate-400">•</span>
               {caixaAtual?.status === 'ABERTO' ? (
                 <span className="font-mono font-extrabold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">
@@ -363,7 +363,7 @@ export const CaixaView: React.FC = () => {
           </div>
 
           {caixaAtual?.status === 'ABERTO' && (
-            <div className="flex items-center gap-3 text-xs font-mono">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-mono">
               <span className="text-slate-600">
                 Vendas no seu turno:{' '}
                 <strong className="text-cyan-800">
@@ -384,7 +384,7 @@ export const CaixaView: React.FC = () => {
         </div>
 
         {/* Cards de Status por Terminal (Caixa 01, Caixa 02, etc.) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {numerosTerminais.map((num) => {
             const aberto = caixasAbertos.find((c) => (c.numeroCaixa || 1) === num);
             const ultimoFechado = !aberto
@@ -410,8 +410,8 @@ export const CaixaView: React.FC = () => {
                     : 'bg-slate-50/60 border-slate-200'
                 }`}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex min-w-0 items-start gap-3">
                     <div
                       className={`w-11 h-11 rounded-xl flex items-center justify-center font-mono font-black text-sm border ${
                         aberto
@@ -421,13 +421,13 @@ export const CaixaView: React.FC = () => {
                     >
                       0{num}
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
                         <h3 className="text-base font-black text-slate-900 font-['Syne']">
                           Caixa 0{num}
                         </h3>
                         <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase ${
+                          className={`shrink-0 px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase ${
                             aberto
                               ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                               : 'bg-slate-200 text-slate-600 border border-slate-300'
@@ -436,7 +436,7 @@ export const CaixaView: React.FC = () => {
                           {aberto ? '● ABERTO' : 'FECHADO / LIVRE'}
                         </span>
                         {ehMeuCaixa && (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-100 text-cyan-800 border border-cyan-300">
+                          <span className="shrink-0 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyan-100 text-cyan-800 border border-cyan-300">
                             SEU CAIXA
                           </span>
                         )}
@@ -461,7 +461,7 @@ export const CaixaView: React.FC = () => {
                   </div>
 
                   {aberto && (
-                    <span className="text-[11px] font-mono text-slate-500">
+                    <span className="self-end whitespace-nowrap text-[11px] font-mono text-slate-500 sm:self-start">
                       Desde{' '}
                       {new Date(aberto.abertoEm).toLocaleTimeString('pt-BR', {
                         hour: '2-digit',
@@ -473,7 +473,7 @@ export const CaixaView: React.FC = () => {
 
                 {/* Resumo do Fluxo de Vendas dentro do Card do Caixa */}
                 {aberto ? (
-                  <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-200/80 text-xs font-mono">
+                  <div className="grid grid-cols-1 min-[360px]:grid-cols-3 gap-2 pt-2 border-t border-slate-200/80 text-xs font-mono">
                     <div className="p-2 rounded-lg bg-white border border-slate-200">
                       <span className="text-[10px] text-slate-500 block uppercase font-bold">
                         Vendas Realizadas
@@ -516,13 +516,13 @@ export const CaixaView: React.FC = () => {
                 )}
 
                 {/* Botões de Ação do Card do Caixa */}
-                <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-2 pt-1">
                   {aberto ? (
                     <>
                       <button
                         type="button"
                         onClick={() => selecionarCaixaParaFluxo(aberto)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                        className={`flex w-full sm:w-auto items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
                           caixaExibido?.id === aberto.id
                             ? 'bg-cyan-600 text-white'
                             : 'bg-cyan-50 hover:bg-cyan-100 text-cyan-800 border border-cyan-200'
@@ -537,11 +537,11 @@ export const CaixaView: React.FC = () => {
                       </button>
 
                       {(ehMeuCaixa || isAdmin) && (
-                        <div className="flex items-center gap-1.5">
+                        <div className="grid grid-cols-2 min-[420px]:grid-cols-3 sm:flex items-center gap-1.5">
                           <button
                             type="button"
                             onClick={() => abrirModalOperacao('REFORCO', aberto)}
-                            className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-cyan-50 text-cyan-800 border border-slate-200 text-xs font-bold cursor-pointer"
+                            className="px-2 py-2 sm:px-2.5 sm:py-1.5 rounded-lg bg-slate-100 hover:bg-cyan-50 text-cyan-800 border border-slate-200 text-[11px] sm:text-xs font-bold cursor-pointer"
                             title="Registrar reforço neste caixa"
                           >
                             + Reforço
@@ -549,7 +549,7 @@ export const CaixaView: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => abrirModalOperacao('SANGRIA', aberto)}
-                            className="px-2.5 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold cursor-pointer"
+                            className="px-2 py-2 sm:px-2.5 sm:py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-[11px] sm:text-xs font-bold cursor-pointer"
                             title="Registrar sangria neste caixa"
                           >
                             - Sangria
@@ -557,7 +557,7 @@ export const CaixaView: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => abrirModalFechamento(aberto)}
-                            className="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold cursor-pointer flex items-center gap-1"
+                            className="px-2 py-2 sm:px-2.5 sm:py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-[11px] sm:text-xs font-bold cursor-pointer flex items-center justify-center gap-1"
                             title="Fechar turno deste caixa"
                           >
                             <Lock className="w-3 h-3" />
@@ -602,15 +602,15 @@ export const CaixaView: React.FC = () => {
 
       {/* 2. FLUXO DE VENDAS & MOVIMENTAÇÕES DO CAIXA EM QUESTÃO */}
       {caixaExibido && (
-        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-5">
+        <div className="min-w-0 bg-white border border-slate-200 rounded-xl p-3 sm:p-5 shadow-xs space-y-4 sm:space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
-            <div className="flex items-center gap-3">
+            <div className="flex min-w-0 items-start gap-3">
               <div className="p-3 rounded-xl bg-amber-50 text-amber-700 border border-amber-200">
                 <TrendingUp className="w-6 h-6" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="text-lg font-black text-slate-900 font-['Syne']">
+                  <h3 className="text-base sm:text-lg font-black text-slate-900 font-['Syne']">
                     Fluxo de Vendas — Caixa 0{caixaExibido.numeroCaixa || 1}
                   </h3>
                   <span
@@ -623,7 +623,7 @@ export const CaixaView: React.FC = () => {
                     {caixaExibido.status === 'ABERTO' ? 'TURNO ABERTO' : 'TURNO FECHADO'}
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 font-mono mt-0.5">
+                <p className="break-words text-xs text-slate-500 font-mono mt-0.5">
                   Funcionário logado:{' '}
                   <strong className="text-slate-900">
                     {caixaExibido.usuario?.nome || caixaExibido.usuarioNome || 'Operador'}
@@ -638,7 +638,7 @@ export const CaixaView: React.FC = () => {
 
             {/* Seletor rápido de turno para inspecionar fluxo */}
             {historicoCaixas.length > 1 && (
-              <div className="flex items-center gap-2">
+              <div className="flex min-w-0 flex-col sm:flex-row sm:items-center gap-2">
                 <label className="text-[11px] font-mono font-bold text-slate-500 uppercase">
                   Alternar Caixa/Turno:
                 </label>
@@ -650,7 +650,7 @@ export const CaixaView: React.FC = () => {
                       historicoCaixas.find((c) => c.id === e.target.value);
                     if (found) selecionarCaixaParaFluxo(found);
                   }}
-                  className="bg-slate-50 border border-slate-300 text-xs text-slate-900 font-mono font-bold rounded-lg px-2.5 py-1.5 outline-none focus:border-cyan-600"
+                  className="w-full min-w-0 sm:w-auto bg-slate-50 border border-slate-300 text-xs text-slate-900 font-mono font-bold rounded-lg px-2.5 py-1.5 outline-none focus:border-cyan-600"
                 >
                   {historicoCaixas.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -667,7 +667,7 @@ export const CaixaView: React.FC = () => {
           </div>
 
           {/* KPIs do Fluxo de Vendas e Gaveta deste Caixa */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-8 gap-2 sm:gap-3">
             <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
               <span className="text-[10px] font-mono font-bold text-slate-500 uppercase block">
                 Fundo Inicial
@@ -748,31 +748,31 @@ export const CaixaView: React.FC = () => {
           </div>
 
           {/* Abas de Vendas do Caixa vs Operações de Gaveta */}
-          <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-            <div className="flex items-center gap-2">
+          <div className="border-b border-slate-200 pb-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setAbaFluxo('vendas')}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`w-full min-w-0 px-3 py-2 rounded-lg text-left text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                   abaFluxo === 'vendas'
                     ? 'bg-cyan-600 text-white shadow-xs'
                     : 'bg-slate-100 text-slate-600 hover:text-slate-900'
                 }`}
               >
                 <Receipt className="w-3.5 h-3.5" />
-                <span>Vendas Realizadas neste Caixa ({vendasDoCaixa.length})</span>
+                <span className="min-w-0">Vendas Realizadas neste Caixa ({vendasDoCaixa.length})</span>
               </button>
               <button
                 type="button"
                 onClick={() => setAbaFluxo('operacoes')}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`w-full min-w-0 px-3 py-2 rounded-lg text-left text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                   abaFluxo === 'operacoes'
                     ? 'bg-cyan-600 text-white shadow-xs'
                     : 'bg-slate-100 text-slate-600 hover:text-slate-900'
                 }`}
               >
                 <Vault className="w-3.5 h-3.5" />
-                <span>Movimentações de Gaveta ({operacoesDoCaixa.length})</span>
+                <span className="min-w-0">Movimentações de Gaveta ({operacoesDoCaixa.length})</span>
               </button>
             </div>
           </div>
@@ -931,11 +931,11 @@ export const CaixaView: React.FC = () => {
       )}
 
       {/* 3. HISTÓRICO DE TURNOS DE CAIXA */}
-      <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <History className="w-5 h-5 text-cyan-700" />
-            <h3 className="text-sm font-bold text-slate-900 font-['Syne'] tracking-wide">
+      <div className="min-w-0 bg-white border border-slate-200 rounded-xl p-3 sm:p-5 shadow-xs">
+        <div className="flex items-start justify-between gap-3 mb-4">
+          <div className="flex min-w-0 items-start gap-2">
+            <History className="w-5 h-5 shrink-0 text-cyan-700" />
+            <h3 className="min-w-0 text-xs sm:text-sm font-bold text-slate-900 font-['Syne'] tracking-wide">
               HISTÓRICO DE TURNOS E FLUXO POR CAIXA
             </h3>
           </div>

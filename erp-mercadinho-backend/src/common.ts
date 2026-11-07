@@ -142,21 +142,8 @@ export class ApiExceptionFilter implements ExceptionFilter {
       };
       [status, message] = codes[erro.code] || [500, "Falha ao acessar o banco de dados"];
     }
-    if (status === 500)
-      console.error(
-        "Falha interna",
-        erro instanceof Error ? erro.name : "Desconhecido",
-      );
+    if (status === 500) console.error("Falha interna", erro);
     const res = host.switchToHttp().getResponse();
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header(
-      "Access-Control-Allow-Methods",
-      "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
-    );
-    res.header(
-      "Access-Control-Allow-Headers",
-      "Content-Type, Authorization, Accept, X-Requested-With, Origin",
-    );
     res.status(status).json({ statusCode: status, message });
   }
 }

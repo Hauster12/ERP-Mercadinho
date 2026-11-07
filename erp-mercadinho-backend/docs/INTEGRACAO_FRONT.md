@@ -5,8 +5,8 @@
 2. Copie `frontend/api.ts` deste pacote para `src/services/api.ts` no front.
 3. No LoginView, chame `api.login(email, senha)`. O usuário deve vir da resposta da API; o seletor de usuário dos mocks não substitui autenticação.
 4. Troque funções síncronas do storageService por chamadas `await` e estados React. Carregue dados em useEffect e trate carregamento, erro e sucesso.
-5. Passe token em todas as chamadas. O cliente de referência faz isso automaticamente. O exemplo mantém token em memória: ao atualizar a página, faça login novamente. Para persistir sessão de modo mais seguro em uma evolução, use cookies HttpOnly com proteção CSRF e ajuste de CORS.
-6. Ao receber 401, limpe a sessao e volte ao login. Em 403, mostre falta de permissão. Em 400/409 mostre a mensagem da API sem simular sucesso local.
+5. Passe token em todas as chamadas. O cliente de referência persiste a sessão e usa IndexedDB apenas para os dados necessários ao PDV offline e para sua fila de vendas; o servidor continua sendo a fonte oficial dos demais dados.
+6. Ao receber 401, limpe a sessão online. Em 403, mostre falta de permissão. Erros de validação e conflito não devem ser simulados como sucesso: vendas offline com conflito permanecem salvas para revisão.
 7. Não remova registros históricos no front. Para produto, chame a rota de inativação.
 8. Não envie campos calculados, nomes de relacionamentos, saldo ou IDs dos mocks nas requisições. IDs de mock como `prod-001` não são UUIDs e não servem para a API. Cadastre novos dados para obter IDs reais.
 
@@ -44,6 +44,7 @@
 - O frontend permite produção de NFCe nos tipos, mas a API só permite HOMOLOGACAO. Remova a opção de produção da tela desta versão.
 - Operação de fechamento retorna conciliação; recarregue o caixa depois.
 - Permissões precisam refletir ADMIN/FUNCIONARIO. O servidor continua verificando mesmo se um botão for exibido indevidamente.
+- O PDV pode concluir vendas sem rede somente com um caixa previamente aberto e catálogo carregado neste terminal. A sincronização usa a chave de idempotência e confere o preço vigente no servidor; conflitos de preço, estoque, cliente ou caixa precisam de revisão.
 
 ## Exemplo React
 
@@ -59,4 +60,12 @@ useEffect(() => {
 }, []);
 ```
 
-Não mantenha escrita em localStorage e escrita na API ao mesmo tempo para vendas/estoque: isso cria duas fontes de saldo. Atualize estado com a resposta do servidor.
+Não use localStorage como banco de vendas. A fila offline do PDV fica no IndexedDB e é enviada à API quando a conexão retorna; os demais módulos continuam dependendo da API online.
+
+## Operação offline do PDV
+
+- A aplicação e o catálogo precisam ter sido carregados online neste navegador/dispositivo. O service worker mantém a interface disponível em recargas offline.
+- Não é possível fazer login ou abrir um caixa novo sem internet. O operador precisa estar autenticado e o caixa deve estar aberto neste terminal.
+- Vendas offline são persistidas localmente e sincronizadas automaticamente quando a conexão volta. Enquanto houver vendas pendentes ou em revisão, o fechamento do caixa é bloqueado.
+- Diferenças no preço, estoque insuficiente, caixa fechado ou dados inválidos não são forçados no servidor: ficam em revisão e podem ser tentados novamente depois de corrigir a causa.
+- IndexedDB é local ao navegador e ao dispositivo; outros terminais não veem a fila. Use HTTPS em produção (ou localhost durante desenvolvimento) para o service worker.

@@ -63,7 +63,9 @@ export class SalesService {
               dados.itens.some(
                 (itemProduto) =>
                   itemProduto.produtoId === itemVenda.produtoId &&
-                  itemVenda.quantidade.equals(itemProduto.quantidade),
+                  itemVenda.quantidade.equals(itemProduto.quantidade) &&
+                  (itemProduto.precoUnitarioEsperado === undefined ||
+                    itemVenda.precoUnitario.equals(itemProduto.precoUnitarioEsperado)),
               ),
             ) &&
             vendaExistente.pagamentos.length === dados.pagamentos.length &&
@@ -109,6 +111,13 @@ export class SalesService {
           });
           if (!produto.ativo)
             throw new BadRequestException("Produto inativo: " + produto.nome);
+          if (
+            itemProduto.precoUnitarioEsperado !== undefined &&
+            !produto.precoVenda.equals(itemProduto.precoUnitarioEsperado)
+          )
+            throw new ConflictException(
+              "Preço alterado desde a última atualização do PDV: " + produto.nome,
+            );
           validateQuantity(produto.unidade, itemProduto.quantidade);
           if (produto.estoqueAtual.lt(itemProduto.quantidade))
             throw new BadRequestException(

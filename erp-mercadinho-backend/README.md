@@ -52,6 +52,24 @@ Endereço: http://localhost:3000/api
 
 Para verificar se a API está funcionando, acesse `GET /api/health`.
 
+### Teste local com PGlite
+
+O script `scripts/start-with-db.cjs` inicia um PostgreSQL local PGlite para desenvolvimento. Para manter os dados de teste separados de qualquer banco local existente, defina `PGLITE_DATA_DIR` antes de iniciar. Por exemplo, no PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force "$env:LOCALAPPDATA\NexusERP" | Out-Null
+$env:JWT_SECRET = 'segredo-local-de-teste-com-mais-de-32-caracteres'
+$env:DATABASE_URL = 'postgresql://postgres:postgres@127.0.0.1:5432/postgres'
+$env:DIRECT_URL = $env:DATABASE_URL
+$env:PGLITE_DATA_DIR = "$env:LOCALAPPDATA\NexusERP\offline-test-db"
+$env:SEED_ADMIN_EMAIL = 'admin@mercadinho.local'
+$env:SEED_ADMIN_PASSWORD = 'teste12345'
+npm run build
+node scripts/start-with-db.cjs
+```
+
+O PGlite mantém o banco no diretório indicado. Escolha um caminho diferente para iniciar uma base de teste vazia. Credenciais de exemplo são apenas para desenvolvimento e não devem ser usadas em produção.
+
 ## Testes automatizados
 
 Para executar todos os testes unitários com Jest:

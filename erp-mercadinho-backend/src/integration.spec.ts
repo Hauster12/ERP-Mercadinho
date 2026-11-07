@@ -156,6 +156,29 @@ test("venda baixa estoque, gera financeiro e comprovante; repetição não dupli
   ).rejects.toThrow();
   await close(c.id);
 });
+test("sincronização offline rejeita preço divergente e preserva a venda para revisão", async () => {
+  const { product, c } = await fixture();
+  const d = {
+    ...sale(c.id, product.id),
+    itens: [{
+      produtoId: product.id,
+      quantidade: 1,
+      precoUnitarioEsperado: 5,
+    }],
+  };
+  await db.produto.update({
+    where: { id: product.id },
+    data: { precoVenda: 6 },
+  });
+
+  await expect(sales.criar(d, actor)).rejects.toThrow(
+    "Preço alterado desde a última atualização do PDV",
+  );
+  expect(
+    await db.venda.count({ where: { chaveIdempotencia: d.chaveIdempotencia } }),
+  ).toBe(0);
+  await close(c.id);
+});
 test("pagamento inválido não deixa venda ou movimentação parcial", async () => {
   const { product, c } = await fixture();
   const before = await db.movimentacaoEstoque.count({
