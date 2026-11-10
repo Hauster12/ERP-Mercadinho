@@ -2,6 +2,7 @@ import "reflect-metadata";
 import "dotenv/config";
 import { NestFactory } from "@nestjs/core";
 import { ValidationPipe } from "@nestjs/common";
+import type { Express, Request, Response } from "express";
 import helmet from "helmet";
 import { AppModule } from "./app.module";
 import { LoggerPortugues } from "./logger";
@@ -101,6 +102,29 @@ export async function createApp() {
   app.enableShutdownHooks();
   return app;
 }
+
+let vercelApp: Promise<Express> | undefined;
+
+export default async function handler(req: Request, res: Response) {
+  vercelApp ??= createApp()
+    .then(async (app) => {
+      try {
+        await app.init();
+        return app.getHttpAdapter().getInstance() as Express;
+      } catch (error) {
+        await app.close();
+        throw error;
+      }
+    })
+    .catch((error) => {
+      vercelApp = undefined;
+      throw error;
+    });
+
+  const express = await vercelApp;
+  express(req, res);
+}
+
 if (require.main === module)
   createApp()
     .then((app) => app.listen(Number(process.env.PORT || 3000), "0.0.0.0"))
