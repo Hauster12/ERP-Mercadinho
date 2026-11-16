@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useMemo } from 'react';
 import {
   Boxes,
   ChartNoAxesColumnIncreasing,
@@ -71,10 +71,43 @@ export const Navigation: React.FC<NavigationProps> = ({
     { id: 'avisarAdmin', label: 'Mensagem ao Admin', icon: MessageSquareText, badge: 'SOS' },
   ];
 
+  // Filtra apenas os itens visíveis para o perfil do usuário atual e atribui F1..Fn em sequência sem pular
+  const visibleNavItems = useMemo(
+    () =>
+      navItems
+        .filter((item) => !item.adminOnly || isAdmin)
+        .map((item, idx) => ({
+          ...item,
+          shortcut: `F${idx + 1}`,
+        })),
+    [isAdmin]
+  );
+
   const handleSelect = (tab: ActiveTab) => {
     setActiveTab(tab);
     setMobileOpen(false);
   };
+
+  // Escuta global das teclas de atalho F1 até F10 (adaptada à quantidade de abas visíveis)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
+
+      const match = /^F([1-9]|10)$/.exec(e.key);
+      if (!match) return;
+
+      const index = parseInt(match[1], 10) - 1;
+      const targetItem = visibleNavItems[index];
+      if (targetItem) {
+        e.preventDefault();
+        setActiveTab(targetItem.id);
+        setMobileOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [visibleNavItems, setActiveTab, setMobileOpen]);
 
   return (
     <>
@@ -181,10 +214,9 @@ export const Navigation: React.FC<NavigationProps> = ({
           )}
         </div>
 
-        {/* Navigation list without icons */}
+        {/* Navigation list */}
         <nav aria-label="Navegação principal" className={`flex-1 ${collapsed ? 'px-2' : 'px-3'} py-2 space-y-1 overflow-y-auto`}>
-          {navItems.map((item) => {
-            if (item.adminOnly && !isAdmin) return null;
+          {visibleNavItems.map((item) => {
             const active = activeTab === item.id;
             const Icon = item.icon;
 
@@ -193,9 +225,10 @@ export const Navigation: React.FC<NavigationProps> = ({
                 key={item.id}
                 type="button"
                 onClick={() => handleSelect(item.id)}
-                aria-label={item.label}
+                aria-label={`${item.label} (${item.shortcut})`}
+                aria-keyshortcuts={item.shortcut}
                 aria-current={active ? 'page' : undefined}
-                title={collapsed ? item.label : undefined}
+                title={collapsed ? `${item.label} (${item.shortcut})` : `Atalho: ${item.shortcut}`}
                 className={`w-full flex items-center ${collapsed ? 'md:justify-center md:px-0' : 'justify-between px-3.5'} gap-3 py-2.5 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
                   active
                     ? 'bg-cyan-50 text-cyan-900 border-l-4 border-cyan-600 shadow-xs'
@@ -204,11 +237,22 @@ export const Navigation: React.FC<NavigationProps> = ({
               >
                 <Icon className="h-5 w-5 shrink-0" />
                 <span className={`min-w-0 flex-1 text-left ${collapsed ? 'md:hidden' : ''}`}>{item.label}</span>
-                {item.badge && (
-                  <span className={`text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-cyan-100 text-cyan-800 border border-cyan-200 font-bold ${collapsed ? 'md:hidden' : ''}`}>
-                    {item.badge}
-                  </span>
-                )}
+                <div className={`flex items-center gap-1.5 shrink-0 ${collapsed ? 'md:hidden' : ''}`}>
+                  {item.badge && (
+                    <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-cyan-100 text-cyan-800 border border-cyan-200 font-bold">
+                      {item.badge}
+                    </span>
+                  )}
+                  <kbd
+                    className={`text-[10px] font-mono px-1.5 py-0.5 rounded border font-bold ${
+                      active
+                        ? 'bg-cyan-600 text-white border-cyan-700'
+                        : 'bg-slate-100 text-slate-600 border-slate-300'
+                    }`}
+                  >
+                    {item.shortcut}
+                  </kbd>
+                </div>
               </button>
             );
           })}

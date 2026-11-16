@@ -780,14 +780,14 @@ export const PdvView: React.FC = () => {
                     </div>
 
                     {/* Product Name */}
-                    <p className="text-xs font-bold text-slate-900 group-hover:text-cyan-700 transition-colors line-clamp-2 mb-2 leading-tight">
+                    <p className="text-sm font-bold text-slate-900 group-hover:text-cyan-700 transition-colors line-clamp-2 mb-2 leading-snug">
                       {prod.nome}
                     </p>
 
                     {/* Price */}
                     <div className="w-full flex items-baseline justify-between mt-auto pt-1.5 border-t border-slate-100">
                       <span className="text-[10px] text-slate-400 font-mono font-bold">VALOR</span>
-                      <span className="text-sm font-extrabold font-mono text-amber-700">
+                      <span className="text-base font-extrabold font-mono text-amber-700">
                         R$ {Number(prod.precoVenda).toFixed(2)}
                       </span>
                     </div>
@@ -850,14 +850,14 @@ export const PdvView: React.FC = () => {
               return (
                 <div
                   key={item.produto.id}
-                  className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between gap-3 text-xs"
+                  className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between gap-3 text-sm"
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] font-mono text-slate-400 font-bold">#{idx + 1}</span>
+                      <span className="text-[11px] font-mono text-slate-400 font-bold">#{idx + 1}</span>
                       <p className="font-bold text-slate-900 truncate">{item.produto.nome}</p>
                     </div>
-                    <div className="flex items-center gap-2 text-[11px] text-slate-500 font-mono mt-0.5">
+                    <div className="flex items-center gap-2 text-xs text-slate-500 font-mono mt-0.5">
                       <span>R$ {Number(item.produto.precoVenda).toFixed(2)} un</span>
                       <span>•</span>
                       <span className="text-cyan-700 font-bold">R$ {itemTotal.toFixed(2)}</span>

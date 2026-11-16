@@ -42,6 +42,7 @@ function buildStartupResponse() {
 async function startPgliteServer(port = 5432) {
   const dataDir = process.env.PGLITE_DATA_DIR || path.join(__dirname, '../.pglite-data');
   const isNew = !fs.existsSync(dataDir);
+  fs.mkdirSync(path.dirname(dataDir), { recursive: true });
   const db = new PGlite(dataDir);
   await db.waitReady;
 
